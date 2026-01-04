@@ -206,3 +206,4 @@ Desarrollado para la gestión de inteligencia criminal.
   <strong>S.I.D.I.C v1.0.0</strong><br>
   Sistema de Información Delictual e Inteligencia Criminal
 </p>
+# S.I.D.I.C
