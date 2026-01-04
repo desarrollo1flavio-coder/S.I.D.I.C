@@ -1,0 +1,334 @@
+{
+  "version": "1.0",
+  "description": "Configuración de mapeo de campos para S.I.D.I.C",
+  "notes": "Modifique estos valores según los nombres de campos en sus shapefiles de QGIS",
+
+  "mappings": {
+    "hechos": {
+      "fecha": {
+        "source_fields": [
+          "FECHA",
+          "fecha",
+          "FEC_HECHO",
+          "FECHA_HECHO",
+          "fecha_hecho"
+        ],
+        "type": "date",
+        "format": "%d/%m/%Y",
+        "required": true,
+        "description": "Fecha del hecho delictual"
+      },
+      "hora": {
+        "source_fields": ["HORA", "hora", "HORA_HECHO", "hora_hecho"],
+        "type": "time",
+        "format": "%H:%M",
+        "required": false,
+        "description": "Hora del hecho delictual"
+      },
+      "delito": {
+        "source_fields": [
+          "DELITO",
+          "delito",
+          "TIPO_DELIT",
+          "tipo_delito",
+          "TIPODELIT"
+        ],
+        "type": "string",
+        "required": true,
+        "description": "Tipo de delito"
+      },
+      "modalidad": {
+        "source_fields": ["MODALIDAD", "modalidad", "MODAL", "MOD_DELIT"],
+        "type": "string",
+        "required": false,
+        "description": "Modalidad del delito"
+      },
+      "direccion": {
+        "source_fields": [
+          "DIRECCION",
+          "direccion",
+          "DOMICILIO",
+          "DIR_HECHO",
+          "CALLE"
+        ],
+        "type": "string",
+        "required": false,
+        "description": "Dirección del hecho"
+      },
+      "movilidad": {
+        "source_fields": ["MOVILIDAD", "movilidad", "MEDIO_MOV", "VEHICULO"],
+        "type": "string",
+        "required": false,
+        "description": "Medio de movilidad utilizado"
+      },
+      "arma": {
+        "source_fields": [
+          "ARMA",
+          "arma",
+          "MEDIO_ARMA",
+          "TIPO_ARMA",
+          "ARMA_USADA"
+        ],
+        "type": "string",
+        "required": false,
+        "description": "Arma o medio utilizado"
+      },
+      "ambito": {
+        "source_fields": [
+          "AMBITO",
+          "ambito",
+          "LUGAR",
+          "TIPO_LUGAR",
+          "AMB_OCURR"
+        ],
+        "type": "string",
+        "required": false,
+        "description": "Ámbito de ocurrencia"
+      },
+      "esclarecido": {
+        "source_fields": [
+          "ESCLARECI",
+          "esclarecido",
+          "ESCLARE",
+          "ACLARADO",
+          "RESUELTO"
+        ],
+        "type": "boolean",
+        "true_values": ["SI", "S", "1", "TRUE", "ESCLARECIDO", "ACLARADO"],
+        "false_values": ["NO", "N", "0", "FALSE", "PENDIENTE"],
+        "required": false,
+        "description": "Si el hecho fue esclarecido"
+      },
+      "nro_sumario": {
+        "source_fields": [
+          "NRO_SUMAR",
+          "nro_sumario",
+          "SUMARIO",
+          "NRO_SUM",
+          "CAUSA"
+        ],
+        "type": "string",
+        "required": false,
+        "description": "Número de sumario"
+      }
+    },
+
+    "mencionados": {
+      "alias": {
+        "source_fields": ["ALIAS", "alias", "APODO", "TAL", "CONOCIDO"],
+        "type": "string",
+        "required": false,
+        "description": "Alias o apodo"
+      },
+      "nombre": {
+        "source_fields": ["NOMBRE", "nombre", "NOMBRES"],
+        "type": "string",
+        "required": false,
+        "description": "Nombre de la persona"
+      },
+      "apellido": {
+        "source_fields": ["APELLIDO", "apellido", "APELLIDOS"],
+        "type": "string",
+        "required": false,
+        "description": "Apellido de la persona"
+      },
+      "delito": {
+        "source_fields": ["DELITO", "delito", "TIPO_DELIT"],
+        "type": "string",
+        "required": true,
+        "description": "Delito en el que fue mencionado"
+      },
+      "fecha": {
+        "source_fields": ["FECHA", "fecha", "FEC_HECHO"],
+        "type": "date",
+        "format": "%d/%m/%Y",
+        "required": false,
+        "description": "Fecha del hecho"
+      },
+      "hora": {
+        "source_fields": ["HORA", "hora"],
+        "type": "time",
+        "format": "%H:%M",
+        "required": false,
+        "description": "Hora del hecho"
+      },
+      "direccion": {
+        "source_fields": ["DIRECCION", "direccion", "DOMICILIO", "DIR_HECHO"],
+        "type": "string",
+        "required": false,
+        "description": "Dirección del hecho"
+      },
+      "datos_filiatorios": {
+        "source_fields": [
+          "DATOS_FIL",
+          "datos_filiatorios",
+          "FILIACION",
+          "DESCRIPCION"
+        ],
+        "type": "string",
+        "required": false,
+        "description": "Datos filiatorios adicionales"
+      },
+      "nro_sumario": {
+        "source_fields": ["NRO_SUMAR", "nro_sumario", "SUMARIO"],
+        "type": "string",
+        "required": false,
+        "description": "Número de sumario"
+      }
+    },
+
+    "aprehendidos": {
+      "nombre": {
+        "source_fields": ["NOMBRE", "nombre", "NOMBRES"],
+        "type": "string",
+        "required": false,
+        "description": "Nombre de la persona"
+      },
+      "apellido": {
+        "source_fields": ["APELLIDO", "apellido", "APELLIDOS"],
+        "type": "string",
+        "required": false,
+        "description": "Apellido de la persona"
+      },
+      "alias": {
+        "source_fields": ["ALIAS", "alias", "APODO"],
+        "type": "string",
+        "required": false,
+        "description": "Alias o apodo"
+      },
+      "edad": {
+        "source_fields": ["EDAD", "edad", "ANIOS"],
+        "type": "integer",
+        "required": false,
+        "description": "Edad de la persona"
+      },
+      "delito": {
+        "source_fields": ["DELITO", "delito", "TIPO_DELIT"],
+        "type": "string",
+        "required": true,
+        "description": "Delito por el que fue aprehendido"
+      },
+      "fecha_aprehension": {
+        "source_fields": [
+          "FECHA_APR",
+          "fecha_aprehension",
+          "FEC_APRE",
+          "FECHA"
+        ],
+        "type": "date",
+        "format": "%d/%m/%Y",
+        "required": false,
+        "description": "Fecha de aprehensión"
+      },
+      "situacion": {
+        "source_fields": ["SITUACION", "situacion", "ESTADO", "SIT_LEGAL"],
+        "type": "string",
+        "required": false,
+        "description": "Situación legal"
+      },
+      "reincidente": {
+        "source_fields": ["REINCIDEN", "reincidente", "REINCID"],
+        "type": "boolean",
+        "true_values": ["SI", "S", "1", "TRUE"],
+        "false_values": ["NO", "N", "0", "FALSE"],
+        "required": false,
+        "description": "Si es reincidente"
+      },
+      "clasificacion": {
+        "source_fields": ["CLASIFIC", "clasificacion", "CLASE", "TIPO_APR"],
+        "type": "string",
+        "required": false,
+        "description": "Clasificación del aprehendido"
+      }
+    },
+
+    "jurisdiccion": {
+      "nombre": {
+        "source_fields": ["NOMBRE", "nombre", "JURISD", "NOM_JURISD"],
+        "type": "string",
+        "required": true,
+        "description": "Nombre de la jurisdicción"
+      },
+      "codigo": {
+        "source_fields": ["CODIGO", "codigo", "COD_JURISD", "ID"],
+        "type": "string",
+        "required": false,
+        "description": "Código de la jurisdicción"
+      }
+    }
+  },
+
+  "delitos": {
+    "categorias": {
+      "ROBOS": [
+        "ROBO",
+        "ROBO AGRAVADO",
+        "ROBO CALIFICADO",
+        "ROBO A MANO ARMADA",
+        "ROBO CON ARMA",
+        "ROBO CON ARMA BLANCA",
+        "ROBO CON ARMA DE FUEGO",
+        "ROBO EN POBLADO Y BANDA",
+        "ROBO DE AUTOMOTOR",
+        "ROBO DE MOTOVEHICULO",
+        "ROBO EN GRADO DE TENTATIVA"
+      ],
+      "HURTOS": [
+        "HURTO",
+        "HURTO CALIFICADO",
+        "HURTO SIMPLE",
+        "HURTO DE AUTOMOTOR",
+        "HURTO DE MOTOVEHICULO",
+        "HURTO EN GRADO DE TENTATIVA"
+      ],
+      "OTROS": []
+    },
+    "simbolos": {
+      "ROBO": "●",
+      "ROBO AGRAVADO": "▲",
+      "ROBO CON ARMA DE FUEGO": "★",
+      "ROBO CON ARMA BLANCA": "◆",
+      "ROBO DE AUTOMOTOR": "■",
+      "ROBO DE MOTOVEHICULO": "◎",
+      "HURTO": "○",
+      "HURTO CALIFICADO": "△",
+      "HURTO DE AUTOMOTOR": "□",
+      "HURTO DE MOTOVEHICULO": "◇",
+      "OTRO": "✕"
+    }
+  },
+
+  "franjas_horarias": {
+    "MADRUGADA": { "inicio": "00:00", "fin": "04:59" },
+    "MAÑANA": { "inicio": "05:00", "fin": "08:59" },
+    "VESPERTINA": { "inicio": "09:00", "fin": "12:59" },
+    "SIESTA": { "inicio": "13:00", "fin": "16:59" },
+    "TARDE": { "inicio": "17:00", "fin": "19:59" },
+    "NOCHE": { "inicio": "20:00", "fin": "23:59" }
+  },
+
+  "dias_semana": [
+    "LUNES",
+    "MARTES",
+    "MIÉRCOLES",
+    "JUEVES",
+    "VIERNES",
+    "SÁBADO",
+    "DOMINGO"
+  ],
+
+  "colores_excel": {
+    "encabezado": {
+      "fondo": "FF0000",
+      "texto": "FFFFFF"
+    },
+    "total": {
+      "fondo": "FFFF00",
+      "texto": "000000"
+    },
+    "subtotal": {
+      "fondo": "0000FF",
+      "texto": "FFFFFF"
+    }
+  }
+}

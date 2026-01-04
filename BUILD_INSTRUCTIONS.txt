@@ -1,0 +1,35 @@
+# ═══════════════════════════════════════════════════════════════════════
+# S.I.D.I.C - Instrucciones de empaquetado con PyInstaller
+# ═══════════════════════════════════════════════════════════════════════
+
+# 1. Instalar PyInstaller
+pip install pyinstaller
+
+# 2. Navegar al directorio del proyecto
+cd "c:\Users\flavi\OneDrive\Escritorio\S.I.D.I.C"
+
+# 3. Activar entorno virtual
+venv\Scripts\activate
+
+# 4. Crear ejecutable
+pyinstaller --name "SIDIC" ^
+    --onefile ^
+    --windowed ^
+    --icon="assets/icon.ico" ^
+    --add-data "src/ui/styles;ui/styles" ^
+    --add-data "config;config" ^
+    --hidden-import "PyQt6" ^
+    --hidden-import "pandas" ^
+    --hidden-import "geopandas" ^
+    --hidden-import "matplotlib" ^
+    --hidden-import "openpyxl" ^
+    src/main.py
+
+# El ejecutable se generará en: dist/SIDIC.exe
+
+# ═══════════════════════════════════════════════════════════════════════
+# Notas:
+# - Puede tomar varios minutos
+# - El ejecutable será grande (~100-200MB) debido a las dependencias
+# - Para reducir tamaño, considere usar --onedir en lugar de --onefile
+# ═══════════════════════════════════════════════════════════════════════
