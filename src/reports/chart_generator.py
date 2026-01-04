@@ -3,9 +3,15 @@ Generador de gráficos de barras.
 
 Genera gráficos con estilo policial para los reportes.
 """
+from __future__ import annotations
+
 import io
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Dict, List, Optional, Tuple, Any, TYPE_CHECKING
 from pathlib import Path
+
+if TYPE_CHECKING:
+    from matplotlib.figure import Figure
+    from matplotlib.axes import Axes
 
 try:
     import matplotlib.pyplot as plt
@@ -91,7 +97,7 @@ class ChartGenerator:
     def _create_figure(
         self,
         figsize: Tuple[float, float] = None
-    ) -> Tuple[plt.Figure, plt.Axes]:
+    ) -> Tuple['Figure', 'Axes']:
         """Crea figura y ejes."""
         figsize = figsize or CHART_CONFIG['figure_size']
         fig, ax = plt.subplots(figsize=figsize, dpi=CHART_CONFIG['dpi'])
@@ -99,8 +105,8 @@ class ChartGenerator:
     
     def _finalize_chart(
         self,
-        fig: plt.Figure,
-        ax: plt.Axes,
+        fig: 'Figure',
+        ax: 'Axes',
         title: str,
         xlabel: str = '',
         ylabel: str = 'Cantidad',
@@ -124,7 +130,7 @@ class ChartGenerator:
     # GRÁFICOS SIMPLES
     # ═══════════════════════════════════════════════════════════════════════
     
-    def grafico_delitos(self) -> plt.Figure:
+    def grafico_delitos(self) -> 'Figure':
         """
         Genera gráfico de barras de delitos con modalidades.
         """
@@ -148,7 +154,7 @@ class ChartGenerator:
         
         return fig
     
-    def grafico_dias_semana(self) -> plt.Figure:
+    def grafico_dias_semana(self) -> 'Figure':
         """
         Genera gráfico de barras de días de la semana.
         """
@@ -168,7 +174,7 @@ class ChartGenerator:
         
         return fig
     
-    def grafico_franja_horaria(self) -> plt.Figure:
+    def grafico_franja_horaria(self) -> 'Figure':
         """
         Genera gráfico de barras de franja horaria.
         """
@@ -188,7 +194,7 @@ class ChartGenerator:
         
         return fig
     
-    def grafico_movilidad(self) -> plt.Figure:
+    def grafico_movilidad(self) -> 'Figure':
         """
         Genera gráfico de barras de medios de movilidad.
         """
@@ -208,7 +214,7 @@ class ChartGenerator:
         
         return fig
     
-    def grafico_armas(self) -> plt.Figure:
+    def grafico_armas(self) -> 'Figure':
         """
         Genera gráfico de barras de armas en robos agravados.
         """
@@ -231,7 +237,7 @@ class ChartGenerator:
         
         return fig
     
-    def grafico_ambito(self) -> plt.Figure:
+    def grafico_ambito(self) -> 'Figure':
         """
         Genera gráfico de barras de ámbito de ocurrencia.
         """
@@ -255,7 +261,7 @@ class ChartGenerator:
     # GRÁFICOS MATRICIALES (BARRAS AGRUPADAS)
     # ═══════════════════════════════════════════════════════════════════════
     
-    def grafico_delito_dia(self) -> plt.Figure:
+    def grafico_delito_dia(self) -> 'Figure':
         """
         Genera gráfico de barras agrupadas: delitos por día.
         """
@@ -308,7 +314,7 @@ class ChartGenerator:
         
         return fig
     
-    def grafico_delito_franja(self) -> plt.Figure:
+    def grafico_delito_franja(self) -> 'Figure':
         """
         Genera gráfico de barras agrupadas: delitos por franja horaria.
         """
@@ -364,7 +370,7 @@ class ChartGenerator:
     # GRÁFICOS COMPARATIVOS
     # ═══════════════════════════════════════════════════════════════════════
     
-    def grafico_comparativo_delitos(self) -> plt.Figure:
+    def grafico_comparativo_delitos(self) -> 'Figure':
         """
         Genera gráfico comparativo de delitos entre períodos.
         """
@@ -406,7 +412,7 @@ class ChartGenerator:
     
     def save_chart(
         self,
-        fig: plt.Figure,
+        fig: 'Figure',
         path: str,
         format: str = 'png'
     ) -> bool:
@@ -430,7 +436,7 @@ class ChartGenerator:
             print(f"Error guardando gráfico: {e}")
             return False
     
-    def chart_to_bytes(self, fig: plt.Figure, format: str = 'png') -> bytes:
+    def chart_to_bytes(self, fig: 'Figure', format: str = 'png') -> bytes:
         """
         Convierte un gráfico a bytes (para insertar en Excel/Word).
         """

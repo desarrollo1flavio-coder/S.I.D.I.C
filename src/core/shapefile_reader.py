@@ -4,10 +4,15 @@ Lector y validador de archivos Shapefile.
 Utiliza geopandas para leer archivos .shp y convertirlos
 a los modelos internos del sistema.
 """
+from __future__ import annotations
+
 import logging
 from pathlib import Path
-from typing import List, Dict, Optional, Tuple, Any
+from typing import List, Dict, Optional, Tuple, Any, TYPE_CHECKING
 from datetime import date
+
+if TYPE_CHECKING:
+    from pandas import Series as PdSeries
 
 try:
     import geopandas as gpd
@@ -221,7 +226,7 @@ class ShapefileReader:
     
     def _row_to_crime_record(
         self,
-        row: 'pd.Series',
+        row: 'PdSeries',
         field_map: Dict[str, Optional[str]]
     ) -> CrimeRecord:
         """Convierte una fila del GeoDataFrame a CrimeRecord."""
@@ -307,7 +312,7 @@ class ShapefileReader:
     
     def _row_to_mentioned(
         self,
-        row: 'pd.Series',
+        row: 'PdSeries',
         field_map: Dict[str, Optional[str]]
     ) -> MentionedPerson:
         """Convierte una fila a MentionedPerson."""
@@ -376,7 +381,7 @@ class ShapefileReader:
     
     def _row_to_apprehended(
         self,
-        row: 'pd.Series',
+        row: 'PdSeries',
         field_map: Dict[str, Optional[str]]
     ) -> Apprehended:
         """Convierte una fila a Apprehended."""
