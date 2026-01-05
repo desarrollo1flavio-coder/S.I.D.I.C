@@ -169,41 +169,51 @@ class TableGenerator:
         p1 = self.report.periodo_principal
         p2 = self.report.periodo_comparacion
         
-        comparator = PeriodComparator(p1, p2)
-        comparaciones = comparator.comparar_delitos()
+        # Validar que ambos períodos existan
+        if not p1 or not p2:
+            return self.generar_tabla_delitos()
         
-        data = []
-        total_p1 = p1.total_hechos
-        total_p2 = p2.total_hechos
+        try:
+            comparator = PeriodComparator(p1, p2)
+            comparaciones = comparator.comparar_delitos()
+            
+            data = []
+            total_p1 = p1.total_hechos
+            total_p2 = p2.total_hechos
+            
+            for comp in comparaciones:
+                data.append({
+                    'DELITOS CON MODALIDADES': comp.categoria.replace('_', ' '),
+                    p1.rango_fechas: comp.valor_periodo_a,
+                    '%': self._format_porcentaje(
+                        self._calcular_porcentaje(comp.valor_periodo_a, total_p1)
+                    ),
+                    p2.rango_fechas: comp.valor_periodo_b,
+                    '% ': self._format_porcentaje(
+                        self._calcular_porcentaje(comp.valor_periodo_b, total_p2)
+                    ),
+                    'Variación': comp.porcentaje_formateado if hasattr(comp, 'porcentaje_formateado') else 'N/A',
+                    'Tendencia': comp.tendencia_icono if hasattr(comp, 'tendencia_icono') else ''
+                })
+            
+            # Total
+            total_comp = comparator.resumen_general().get('total_hechos')
+            if total_comp:
+                data.append({
+                    'DELITOS CON MODALIDADES': 'TOTAL DE HECHOS',
+                    p1.rango_fechas: total_p1,
+                    '%': '100,00%',
+                    p2.rango_fechas: total_p2,
+                    '% ': '100,00%',
+                    'Variación': total_comp.porcentaje_formateado if hasattr(total_comp, 'porcentaje_formateado') else 'N/A',
+                    'Tendencia': total_comp.tendencia_icono if hasattr(total_comp, 'tendencia_icono') else ''
+                })
+            
+            return pd.DataFrame(data)
         
-        for comp in comparaciones:
-            data.append({
-                'DELITOS CON MODALIDADES': comp.categoria.replace('_', ' '),
-                p1.rango_fechas: comp.valor_periodo_a,
-                '%': self._format_porcentaje(
-                    self._calcular_porcentaje(comp.valor_periodo_a, total_p1)
-                ),
-                p2.rango_fechas: comp.valor_periodo_b,
-                '% ': self._format_porcentaje(
-                    self._calcular_porcentaje(comp.valor_periodo_b, total_p2)
-                ),
-                'Variación': comp.porcentaje_formateado,
-                'Tendencia': comp.tendencia_icono
-            })
-        
-        # Total
-        total_comp = comparator.resumen_general()['total_hechos']
-        data.append({
-            'DELITOS CON MODALIDADES': 'TOTAL DE HECHOS',
-            p1.rango_fechas: total_p1,
-            '%': '100,00%',
-            p2.rango_fechas: total_p2,
-            '% ': '100,00%',
-            'Variación': total_comp.porcentaje_formateado,
-            'Tendencia': total_comp.tendencia_icono
-        })
-        
-        return pd.DataFrame(data)
+        except Exception as e:
+            print(f"Error generando tabla comparativa de delitos: {e}")
+            return self.generar_tabla_delitos()
     
     # ═══════════════════════════════════════════════════════════════════════
     # DÍAS DE LA SEMANA
@@ -493,13 +503,25 @@ class TableGenerator:
         if not self.report.es_comparativo:
             return pd.DataFrame()
         
-        comparator = PeriodComparator(
-            self.report.periodo_principal,
-            self.report.periodo_comparacion
-        )
+        p1 = self.report.periodo_principal
+        p2 = self.report.periodo_comparacion
         
-        filas = comparator.to_comparison_table()
-        return pd.DataFrame(filas)
+        # Validar que ambos períodos existan
+        if not p1 or not p2:
+            return pd.DataFrame()
+        
+        try:
+            comparator = PeriodComparator(p1, p2)
+            filas = comparator.to_comparison_table()
+            
+            if not filas:
+                return pd.DataFrame()
+            
+            return pd.DataFrame(filas)
+        
+        except Exception as e:
+            print(f"Error generando tabla comparativa general: {e}")
+            return pd.DataFrame()
     
     # ═══════════════════════════════════════════════════════════════════════
     # GENERAR TODAS LAS TABLAS
@@ -512,24 +534,96 @@ class TableGenerator:
         Returns:
             Diccionario {nombre_tabla: DataFrame}
         """
-        tablas = {
-            'cuadro_referencia': self.generar_cuadro_referencia(),
-            'delitos': self.generar_tabla_delitos() if not self.report.es_comparativo 
-                       else self.generar_tabla_delitos_comparativa(),
-            'dias_semana': self.generar_tabla_dias_semana(),
-            'franja_horaria': self.generar_tabla_franja_horaria(),
-            'movilidad': self.generar_tabla_movilidad(),
-            'armas': self.generar_tabla_armas(),
-            'ambito': self.generar_tabla_ambito(),
-            'matriz_delito_dia': self.generar_matriz_delito_dia(),
-            'matriz_delito_franja': self.generar_matriz_delito_franja(),
-            'mencionados': self.generar_tabla_mencionados(),
-            'aprehendidos': self.generar_tabla_aprehendidos(),
-            'aprehendidos_clasificacion': self.generar_tabla_aprehendidos_clasificacion(),
-            'esclarecimiento': self.generar_tabla_esclarecimiento(),
-        }
+        tablas = {}
         
+        # Generar cada tabla con manejo de errores
+        try:
+            tablas['cuadro_referencia'] = self.generar_cuadro_referencia()
+        except Exception as e:
+            print(f"Error generando cuadro_referencia: {e}")
+            tablas['cuadro_referencia'] = pd.DataFrame()
+        
+        try:
+            if self.report.es_comparativo:
+                tablas['delitos'] = self.generar_tabla_delitos_comparativa()
+            else:
+                tablas['delitos'] = self.generar_tabla_delitos()
+        except Exception as e:
+            print(f"Error generando tabla delitos: {e}")
+            tablas['delitos'] = pd.DataFrame()
+        
+        try:
+            tablas['dias_semana'] = self.generar_tabla_dias_semana()
+        except Exception as e:
+            print(f"Error generando dias_semana: {e}")
+            tablas['dias_semana'] = pd.DataFrame()
+        
+        try:
+            tablas['franja_horaria'] = self.generar_tabla_franja_horaria()
+        except Exception as e:
+            print(f"Error generando franja_horaria: {e}")
+            tablas['franja_horaria'] = pd.DataFrame()
+        
+        try:
+            tablas['movilidad'] = self.generar_tabla_movilidad()
+        except Exception as e:
+            print(f"Error generando movilidad: {e}")
+            tablas['movilidad'] = pd.DataFrame()
+        
+        try:
+            tablas['armas'] = self.generar_tabla_armas()
+        except Exception as e:
+            print(f"Error generando armas: {e}")
+            tablas['armas'] = pd.DataFrame()
+        
+        try:
+            tablas['ambito'] = self.generar_tabla_ambito()
+        except Exception as e:
+            print(f"Error generando ambito: {e}")
+            tablas['ambito'] = pd.DataFrame()
+        
+        try:
+            tablas['matriz_delito_dia'] = self.generar_matriz_delito_dia()
+        except Exception as e:
+            print(f"Error generando matriz_delito_dia: {e}")
+            tablas['matriz_delito_dia'] = pd.DataFrame()
+        
+        try:
+            tablas['matriz_delito_franja'] = self.generar_matriz_delito_franja()
+        except Exception as e:
+            print(f"Error generando matriz_delito_franja: {e}")
+            tablas['matriz_delito_franja'] = pd.DataFrame()
+        
+        try:
+            tablas['mencionados'] = self.generar_tabla_mencionados()
+        except Exception as e:
+            print(f"Error generando mencionados: {e}")
+            tablas['mencionados'] = pd.DataFrame()
+        
+        try:
+            tablas['aprehendidos'] = self.generar_tabla_aprehendidos()
+        except Exception as e:
+            print(f"Error generando aprehendidos: {e}")
+            tablas['aprehendidos'] = pd.DataFrame()
+        
+        try:
+            tablas['aprehendidos_clasificacion'] = self.generar_tabla_aprehendidos_clasificacion()
+        except Exception as e:
+            print(f"Error generando aprehendidos_clasificacion: {e}")
+            tablas['aprehendidos_clasificacion'] = pd.DataFrame()
+        
+        try:
+            tablas['esclarecimiento'] = self.generar_tabla_esclarecimiento()
+        except Exception as e:
+            print(f"Error generando esclarecimiento: {e}")
+            tablas['esclarecimiento'] = pd.DataFrame()
+        
+        # Tabla comparativa general solo para reportes comparativos
         if self.report.es_comparativo:
-            tablas['comparativa_general'] = self.generar_tabla_comparativa_general()
+            try:
+                tablas['comparativa_general'] = self.generar_tabla_comparativa_general()
+            except Exception as e:
+                print(f"Error generando comparativa_general: {e}")
+                tablas['comparativa_general'] = pd.DataFrame()
         
         return tablas

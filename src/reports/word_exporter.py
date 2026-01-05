@@ -44,7 +44,12 @@ class WordExporter:
         
         self.report = report_data
         self.document = Document()
+        self._last_error = ""
         self._setup_styles()
+    
+    def get_last_error(self) -> str:
+        """Retorna el último error ocurrido."""
+        return self._last_error
     
     def _setup_styles(self):
         """Configura los estilos del documento."""
@@ -258,7 +263,8 @@ class WordExporter:
         self,
         output_path: str,
         tables: Dict[str, pd.DataFrame],
-        charts: Optional[Dict[str, bytes]] = None
+        charts: Optional[Dict[str, bytes]] = None,
+        options: Optional[Dict[str, Any]] = None
     ) -> bool:
         """
         Exporta el reporte completo a Word.
@@ -267,11 +273,20 @@ class WordExporter:
             output_path: Ruta del archivo de salida.
             tables: Diccionario de tablas generadas.
             charts: Diccionario de gráficos (bytes PNG).
+            options: Opciones de exportación (incluir_graficos, incluir_cuadro_ref, etc.)
         
         Returns:
             True si se exportó correctamente.
         """
         charts = charts or {}
+        options = options or {}
+        
+        # Opciones por defecto
+        incluir_graficos = options.get('incluir_graficos', True)
+        incluir_cuadro_ref = options.get('incluir_cuadro_ref', True)
+        incluir_mencionados = options.get('incluir_mencionados', True)
+        incluir_matrices = options.get('incluir_matrices', True)
+        incluir_comparativos = options.get('incluir_comparativos', True)
         
         try:
             # Encabezado
@@ -281,7 +296,7 @@ class WordExporter:
             self._add_resumen()
             
             # Cuadro de referencia
-            if 'cuadro_referencia' in tables:
+            if incluir_cuadro_ref and 'cuadro_referencia' in tables:
                 df = tables['cuadro_referencia']
                 # Simplificar para Word
                 df_simple = df[['Símbolo', 'Descripción', 'Cantidad']].copy()
@@ -290,52 +305,53 @@ class WordExporter:
             # Delitos con modalidades
             if 'delitos' in tables:
                 self._add_table(tables['delitos'], "DELITOS CON MODALIDADES")
-                if 'delitos' in charts:
+                if incluir_graficos and 'delitos' in charts:
                     self._add_image(charts['delitos'])
             
             # Días de la semana
             if 'dias_semana' in tables:
                 self._add_table(tables['dias_semana'], "DÍAS DE LA SEMANA EN QUE OCURRIERON LOS HECHOS")
-                if 'dias_semana' in charts:
+                if incluir_graficos and 'dias_semana' in charts:
                     self._add_image(charts['dias_semana'])
             
             # Franja horaria
             if 'franja_horaria' in tables:
                 self._add_table(tables['franja_horaria'], "FRANJA HORARIA EN QUE OCURRIERON LOS HECHOS")
-                if 'franja_horaria' in charts:
+                if incluir_graficos and 'franja_horaria' in charts:
                     self._add_image(charts['franja_horaria'])
             
             # Movilidad
             if 'movilidad' in tables:
                 self._add_table(tables['movilidad'], "MEDIOS DE MOVILIDAD UTILIZADOS")
-                if 'movilidad' in charts:
+                if incluir_graficos and 'movilidad' in charts:
                     self._add_image(charts['movilidad'])
             
             # Armas
             if 'armas' in tables:
                 self._add_table(tables['armas'], "MEDIOS O ARMAS UTILIZADAS EN ROBOS AGRAVADOS")
-                if 'armas' in charts:
+                if incluir_graficos and 'armas' in charts:
                     self._add_image(charts['armas'])
             
             # Ámbito
             if 'ambito' in tables:
                 self._add_table(tables['ambito'], "ÁMBITO DE OCURRENCIA DELICTUAL")
-                if 'ambito' in charts:
+                if incluir_graficos and 'ambito' in charts:
                     self._add_image(charts['ambito'])
             
             # Matrices
-            if 'matriz_delito_dia' in tables:
+            if incluir_matrices and 'matriz_delito_dia' in tables:
                 self._add_table(tables['matriz_delito_dia'], "DELITOS POR DÍAS DE LA SEMANA")
-                if 'delito_dia' in charts:
+                if incluir_graficos and 'delito_dia' in charts:
                     self._add_image(charts['delito_dia'])
             
-            if 'matriz_delito_franja' in tables:
+            if incluir_matrices and 'matriz_delito_franja' in tables:
                 self._add_table(tables['matriz_delito_franja'], "DELITOS POR FRANJA HORARIA")
-                if 'delito_franja' in charts:
+                if incluir_graficos and 'delito_franja' in charts:
                     self._add_image(charts['delito_franja'])
             
             # Mencionados (formato texto)
-            self._add_mencionados_texto()
+            if incluir_mencionados:
+                self._add_mencionados_texto()
             
             # Aprehendidos
             if 'aprehendidos' in tables:
@@ -345,7 +361,7 @@ class WordExporter:
                 self._add_table(tables['aprehendidos_clasificacion'], "CLASIFICACIÓN DE APREHENDIDOS")
             
             # Comparativa
-            if 'comparativa_general' in tables:
+            if incluir_comparativos and 'comparativa_general' in tables and not tables['comparativa_general'].empty:
                 self._add_table(tables['comparativa_general'], "CUADRO COMPARATIVO ENTRE PERÍODOS")
             
             # Guardar
@@ -355,5 +371,12 @@ class WordExporter:
             return True
         
         except Exception as e:
-            print(f"Error exportando a Word: {e}")
+            import traceback
+            import logging
+            logger = logging.getLogger(__name__)
+            error_msg = f"Error exportando a Word: {e}"
+            logger.error(error_msg)
+            traceback.print_exc()
+            # Guardar el error para que pueda ser recuperado
+            self._last_error = str(e)
             return False

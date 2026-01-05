@@ -319,7 +319,8 @@ class ExcelExporter:
         self,
         output_path: str,
         tables: Dict[str, pd.DataFrame],
-        charts: Optional[Dict[str, bytes]] = None
+        charts: Optional[Dict[str, bytes]] = None,
+        options: Optional[Dict[str, Any]] = None
     ) -> bool:
         """
         Exporta el reporte completo a Excel.
@@ -328,18 +329,27 @@ class ExcelExporter:
             output_path: Ruta del archivo de salida.
             tables: Diccionario de tablas generadas.
             charts: Diccionario de gráficos (bytes PNG).
+            options: Opciones de exportación (incluir_graficos, incluir_cuadro_ref, etc.)
         
         Returns:
             True si se exportó correctamente.
         """
         charts = charts or {}
+        options = options or {}
+        
+        # Opciones por defecto
+        incluir_graficos = options.get('incluir_graficos', True)
+        incluir_cuadro_ref = options.get('incluir_cuadro_ref', True)
+        incluir_mencionados = options.get('incluir_mencionados', True)
+        incluir_matrices = options.get('incluir_matrices', True)
+        incluir_comparativos = options.get('incluir_comparativos', True)
         
         try:
             # Hoja de resumen
             self._create_resumen_sheet()
             
             # Cuadro de referencia
-            if 'cuadro_referencia' in tables:
+            if incluir_cuadro_ref and 'cuadro_referencia' in tables:
                 self._create_table_sheet(
                     "Cuadro Referencia",
                     "CUADRO DE REFERENCIA",
@@ -352,7 +362,7 @@ class ExcelExporter:
                     "Delitos",
                     "DELITOS CON MODALIDADES",
                     tables['delitos'],
-                    charts.get('delitos')
+                    charts.get('delitos') if incluir_graficos else None
                 )
             
             # Días de la semana
@@ -361,7 +371,7 @@ class ExcelExporter:
                     "Días Semana",
                     "DÍAS DE LA SEMANA EN QUE OCURRIERON LOS HECHOS",
                     tables['dias_semana'],
-                    charts.get('dias_semana')
+                    charts.get('dias_semana') if incluir_graficos else None
                 )
             
             # Franja horaria
@@ -370,7 +380,7 @@ class ExcelExporter:
                     "Franja Horaria",
                     "FRANJA HORARIA EN QUE OCURRIERON LOS HECHOS",
                     tables['franja_horaria'],
-                    charts.get('franja_horaria')
+                    charts.get('franja_horaria') if incluir_graficos else None
                 )
             
             # Movilidad
@@ -379,7 +389,7 @@ class ExcelExporter:
                     "Movilidad",
                     "MEDIOS DE MOVILIDAD UTILIZADOS",
                     tables['movilidad'],
-                    charts.get('movilidad')
+                    charts.get('movilidad') if incluir_graficos else None
                 )
             
             # Armas
@@ -388,7 +398,7 @@ class ExcelExporter:
                     "Armas",
                     "MEDIOS O ARMAS UTILIZADAS EN ROBOS AGRAVADOS",
                     tables['armas'],
-                    charts.get('armas')
+                    charts.get('armas') if incluir_graficos else None
                 )
             
             # Ámbito
@@ -397,29 +407,29 @@ class ExcelExporter:
                     "Ámbito",
                     "AMBITO DE OCURRENCIA DELICTUAL",
                     tables['ambito'],
-                    charts.get('ambito')
+                    charts.get('ambito') if incluir_graficos else None
                 )
             
             # Matriz delito × día
-            if 'matriz_delito_dia' in tables:
+            if incluir_matrices and 'matriz_delito_dia' in tables:
                 self._create_table_sheet(
                     "Delitos x Día",
                     "DELITOS POR DÍAS DE LA SEMANA",
                     tables['matriz_delito_dia'],
-                    charts.get('delito_dia')
+                    charts.get('delito_dia') if incluir_graficos else None
                 )
             
             # Matriz delito × franja
-            if 'matriz_delito_franja' in tables:
+            if incluir_matrices and 'matriz_delito_franja' in tables:
                 self._create_table_sheet(
                     "Delitos x Franja",
                     "DELITOS POR FRANJA HORARIA",
                     tables['matriz_delito_franja'],
-                    charts.get('delito_franja')
+                    charts.get('delito_franja') if incluir_graficos else None
                 )
             
             # Mencionados
-            if 'mencionados' in tables:
+            if incluir_mencionados and 'mencionados' in tables:
                 self._create_table_sheet(
                     "Mencionados",
                     "MENCIONADOS COMO POSIBLES AUTORES MATERIALES",
@@ -451,7 +461,7 @@ class ExcelExporter:
                 )
             
             # Comparativa general
-            if 'comparativa_general' in tables:
+            if incluir_comparativos and 'comparativa_general' in tables:
                 self._create_table_sheet(
                     "Comparativa",
                     "CUADRO COMPARATIVO ENTRE PERÍODOS",

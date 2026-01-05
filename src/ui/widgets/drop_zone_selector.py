@@ -32,32 +32,36 @@ class DropZone(QFrame):
     def _setup_ui(self):
         """Configura la interfaz."""
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(20, 30, 20, 30)
-        layout.setSpacing(12)
+        layout.setContentsMargins(40, 50, 40, 50)
+        layout.setSpacing(29)
         layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
-        # Icono
-        icon_label = QLabel("📥")
-        icon_label.setStyleSheet("font-size: 48px;")
+        # Icono (usar texto en lugar de emoji para compatibilidad)
+        icon_label = QLabel("⬇")
+        icon_label.setStyleSheet("font-size: 36px; color: #00d4ff;")
         icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(icon_label)
         
         # Texto principal
         self.text_label = QLabel("Arrastra archivos .shp o una carpeta aquí")
         self.text_label.setObjectName("dropZoneText")
+        self.text_label.setStyleSheet("font-size: 13pt; color: #888888; font-weight: bold;")
         self.text_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.text_label)
         
         # Botón examinar
-        btn_browse = QPushButton("📂 Examinar")
+        btn_browse = QPushButton("  Examinar Archivos  ")
         btn_browse.setObjectName("dropZoneBrowse")
+        btn_browse.setMinimumWidth(180)
+        btn_browse.setMinimumHeight(40)
         btn_browse.setCursor(Qt.CursorShape.PointingHandCursor)
         btn_browse.clicked.connect(self._on_browse)
         layout.addWidget(btn_browse, alignment=Qt.AlignmentFlag.AlignCenter)
         
         # Texto secundario
-        hint_label = QLabel("Soporta: .shp, carpetas con shapefiles")
+        hint_label = QLabel("Formatos: .shp, .dbf, .shx, .prj, .qpj, .cpg | También puedes arrastrar carpetas")
         hint_label.setObjectName("dropZoneHint")
+        hint_label.setStyleSheet("font-size: 9pt; color: #555566;")
         hint_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(hint_label)
     
@@ -67,7 +71,7 @@ class DropZone(QFrame):
         msg = QMessageBox(self)
         msg.setWindowTitle("Seleccionar")
         msg.setText("¿Qué desea seleccionar?")
-        btn_files = msg.addButton("Archivos .shp", QMessageBox.ButtonRole.ActionRole)
+        btn_files = msg.addButton("Archivos QGIS", QMessageBox.ButtonRole.ActionRole)
         btn_folder = msg.addButton("Carpeta", QMessageBox.ButtonRole.ActionRole)
         msg.addButton(QMessageBox.StandardButton.Cancel)
         msg.exec()
@@ -79,7 +83,7 @@ class DropZone(QFrame):
                 self,
                 "Seleccionar archivos shapefile",
                 str(Path.home()),
-                "Shapefile (*.shp)"
+                "Archivos QGIS (*.shp *.dbf *.shx *.prj *.qpj *.cpg);;Shapefile (*.shp);;Todos (*.*)"
             )
             if files:
                 self.files_dropped.emit(files)
@@ -202,25 +206,41 @@ class DropZoneSelector(QWidget):
         self.table = QTableWidget()
         self.table.setObjectName("filesTable")
         self.table.setColumnCount(4)
-        self.table.setHorizontalHeaderLabels(["Archivo", "Tipo", "Estado", ""])
-        self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
-        self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed)
-        self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.Fixed)
-        self.table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.Fixed)
-        self.table.setColumnWidth(1, 180)
-        self.table.setColumnWidth(2, 80)
-        self.table.setColumnWidth(3, 50)
+        self.table.setHorizontalHeaderLabels(["Archivo", "Tipo", "Estado", "Quitar"])
+        
+        # Configurar anchos de columna
+        header = self.table.horizontalHeader()
+        header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed)
+        header.setSectionResizeMode(2, QHeaderView.ResizeMode.Fixed)
+        header.setSectionResizeMode(3, QHeaderView.ResizeMode.Fixed)
+        self.table.setColumnWidth(1, 160)
+        self.table.setColumnWidth(2, 70)
+        self.table.setColumnWidth(3, 70)
+        
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.table.verticalHeader().setVisible(False)
-        self.table.setMinimumHeight(150)
-        self.table.setMaximumHeight(250)
+        self.table.setMinimumHeight(120)
+        self.table.setMaximumHeight(200)
+        self.table.setAlternatingRowColors(True)
+        self.table.setStyleSheet("""
+            QTableWidget {
+                background-color: #12121c;
+                alternate-background-color: #0d0d18;
+                gridline-color: #333344;
+            }
+            QTableWidget::item {
+                padding: 6px;
+            }
+        """)
         group_layout.addWidget(self.table)
         
         # Botón limpiar
         btn_layout = QHBoxLayout()
-        btn_clear = QPushButton("🗑️ Limpiar Todo")
+        btn_clear = QPushButton("Limpiar Todo")
         btn_clear.setProperty("class", "secondary")
+        btn_clear.setMinimumWidth(120)
         btn_clear.clicked.connect(self._on_clear_all)
         btn_layout.addWidget(btn_clear)
         btn_layout.addStretch()
@@ -239,6 +259,7 @@ class DropZoneSelector(QWidget):
     def _on_files_dropped(self, paths: List[str]):
         """Procesa los archivos/carpetas soltados."""
         shp_files = []
+        qgis_extensions = {'.shp', '.dbf', '.shx', '.prj', '.qpj', '.cpg'}
         
         for path in paths:
             p = Path(path)
@@ -248,12 +269,31 @@ class DropZoneSelector(QWidget):
                 shp_files.extend(p.glob("*.shp"))
             elif p.suffix.lower() == '.shp':
                 shp_files.append(p)
+            elif p.suffix.lower() in qgis_extensions:
+                # Si es un archivo asociado (.dbf, .shx, etc), buscar el .shp correspondiente
+                shp_path = p.with_suffix('.shp')
+                if shp_path.exists() and shp_path not in shp_files:
+                    shp_files.append(shp_path)
+                elif not shp_path.exists():
+                    # Informar que no existe el .shp
+                    QMessageBox.warning(
+                        self,
+                        "Archivo .shp no encontrado",
+                        f"El archivo {p.name} es un componente de shapefile,\n"
+                        f"pero no se encontró el archivo principal:\n\n"
+                        f"{shp_path.name}\n\n"
+                        "Asegúrese de que todos los archivos estén en la misma carpeta."
+                    )
         
         if not shp_files:
             QMessageBox.warning(
                 self,
                 "Sin Archivos",
-                "No se encontraron archivos .shp en la selección."
+                "No se encontraron archivos shapefile válidos.\n\n"
+                "Puede arrastrar:\n"
+                "• Archivos .shp directamente\n"
+                "• Archivos asociados (.dbf, .shx, .prj, .qpj, .cpg)\n"
+                "• Carpetas con shapefiles"
             )
             return
         
@@ -362,14 +402,33 @@ class DropZoneSelector(QWidget):
         
         # Estado de validación
         is_valid, message = self._validate_shapefile(path)
-        status_item = QTableWidgetItem("✅" if is_valid else "⚠️")
+        status_text = "OK" if is_valid else "!"
+        status_item = QTableWidgetItem(status_text)
         status_item.setToolTip(message)
         status_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+        if is_valid:
+            status_item.setForeground(Qt.GlobalColor.green)
+        else:
+            status_item.setForeground(Qt.GlobalColor.yellow)
         self.table.setItem(row, 2, status_item)
         
         # Botón eliminar
-        btn_remove = QPushButton("🗑️")
-        btn_remove.setMaximumWidth(40)
+        btn_remove = QPushButton("X")
+        btn_remove.setStyleSheet("""
+            QPushButton {
+                background-color: #ff3b3b;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                font-weight: bold;
+                padding: 4px 8px;
+            }
+            QPushButton:hover {
+                background-color: #ff5555;
+            }
+        """)
+        btn_remove.setMaximumWidth(50)
+        btn_remove.setMinimumHeight(28)
         btn_remove.setCursor(Qt.CursorShape.PointingHandCursor)
         btn_remove.clicked.connect(lambda checked, r=row: self._on_remove_row(r))
         self.table.setCellWidget(row, 3, btn_remove)
@@ -513,11 +572,11 @@ class DropZoneSelector(QWidget):
         if total == 0:
             self.status_label.setText("")
         elif required_ok:
-            self.status_label.setText(f"✅ {total} archivo(s) cargado(s)")
-            self.status_label.setStyleSheet("color: #00ff88;")
+            self.status_label.setText(f"{total} archivo(s) cargado(s)")
+            self.status_label.setStyleSheet("color: #00ff88; font-weight: bold;")
         else:
-            self.status_label.setText(f"⚠️ Falta: Hechos Delictuales")
-            self.status_label.setStyleSheet("color: #ffaa00;")
+            self.status_label.setText("Falta: Hechos Delictuales*")
+            self.status_label.setStyleSheet("color: #ffaa00; font-weight: bold;")
     
     def get_files(self) -> Dict[str, str]:
         """

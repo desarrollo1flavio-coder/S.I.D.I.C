@@ -548,8 +548,8 @@ QGroupBox {
     background-color: #0d0d18;
     border: 2px solid #333344;
     border-radius: 8px;
-    margin-top: 16px;
-    padding-top: 16px;
+    margin-top: 20px;
+    padding: 20px 12px 12px 12px;
     font-weight: bold;
     color: #00d4ff;
 }
@@ -557,9 +557,11 @@ QGroupBox {
 QGroupBox::title {
     subcontrol-origin: margin;
     subcontrol-position: top left;
-    padding: 0 12px;
-    background-color: #0a0a12;
+    padding: 4px 16px;
+    margin-left: 10px;
+    background-color: #0d0d18;
     color: #00d4ff;
+    font-size: 11pt;
 }
 
 QFrame {

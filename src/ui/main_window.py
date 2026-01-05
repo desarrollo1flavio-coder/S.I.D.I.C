@@ -52,13 +52,13 @@ class ReportGeneratorThread(QThread):
         try:
             self.progress.emit(5, "Cargando módulos...")
             
-            from ..core.data_processor import DataProcessor
-            from ..core.field_mapper import FieldMapper
-            from ..reports.table_generator import TableGenerator
-            from ..reports.chart_generator import ChartGenerator
-            from ..reports.excel_exporter import ExcelExporter
-            from ..reports.word_exporter import WordExporter
-            from ..reports.pdf_exporter import PDFExporter
+            from src.core.data_processor import DataProcessor
+            from src.core.field_mapper import FieldMapper
+            from src.reports.table_generator import TableGenerator
+            from src.reports.chart_generator import ChartGenerator
+            from src.reports.excel_exporter import ExcelExporter
+            from src.reports.word_exporter import WordExporter
+            from src.reports.pdf_exporter import PDFExporter
             
             self.progress.emit(10, "Configurando mapeo de campos...")
             
@@ -68,13 +68,17 @@ class ReportGeneratorThread(QThread):
             self.progress.emit(15, "Cargando shapefiles...")
             
             # Procesar datos
-            processor = DataProcessor(
-                hechos_path=self.files.get('hechos', ''),
-                mencionados_path=self.files.get('mencionados'),
-                aprehendidos_path=self.files.get('aprehendidos'),
-                jurisdiccion_path=self.files.get('jurisdiccion'),
-                field_mapper=field_mapper
-            )
+            processor = DataProcessor(field_mapper=field_mapper)
+            
+            # Cargar cada shapefile
+            if self.files.get('hechos'):
+                processor.load_hechos(self.files['hechos'])
+            if self.files.get('mencionados'):
+                processor.load_mencionados(self.files['mencionados'])
+            if self.files.get('aprehendidos'):
+                processor.load_aprehendidos(self.files['aprehendidos'])
+            if self.files.get('jurisdiccion'):
+                processor.load_jurisdiccion(self.files['jurisdiccion'])
             
             self.progress.emit(30, "Filtrando por período...")
             
@@ -85,19 +89,22 @@ class ReportGeneratorThread(QThread):
             
             # Crear reporte
             if len(self.periods) > 1:
-                # Reporte comparativo
-                report = processor.create_comparative_report(
-                    self.periods,
-                    titulo=self.options.get('titulo', 'Informe Delictual'),
-                    jurisdiccion=self.options.get('jurisdiccion', '')
+                # Reporte comparativo - crear lista de periodos con nombres
+                periodos_formateados = []
+                for i, (inicio, fin) in enumerate(self.periods):
+                    nombre = f"Período {i + 1}"
+                    periodos_formateados.append((nombre, inicio, fin))
+                
+                report = processor.create_report(
+                    periodos_formateados,
+                    titulo=self.options.get('titulo', 'Informe Delictual')
                 )
             else:
                 # Reporte simple
-                report = processor.create_report(
+                report = processor.create_single_period_report(
                     start_date,
                     end_date,
-                    titulo=self.options.get('titulo', 'Informe Delictual'),
-                    jurisdiccion=self.options.get('jurisdiccion', '')
+                    titulo=self.options.get('titulo', 'Informe Delictual')
                 )
             
             self.progress.emit(50, "Generando tablas...")
@@ -136,7 +143,7 @@ class ReportGeneratorThread(QThread):
                     excel_path += '.xlsx'
                 
                 exporter = ExcelExporter(report)
-                success = exporter.export(excel_path, tables, charts)
+                success = exporter.export(excel_path, tables, charts, self.options)
                 
                 if success:
                     self.finished.emit(True, excel_path, "Reporte Excel generado exitosamente")
@@ -151,12 +158,13 @@ class ReportGeneratorThread(QThread):
                     word_path += '.docx'
                 
                 exporter = WordExporter(report)
-                success = exporter.export(word_path, tables, charts)
+                success = exporter.export(word_path, tables, charts, self.options)
                 
                 if success:
                     self.finished.emit(True, word_path, "Reporte Word generado exitosamente")
                 else:
-                    self.error.emit("Error al generar el archivo Word")
+                    error_detail = exporter.get_last_error() or "Error desconocido"
+                    self.error.emit(f"Error al generar el archivo Word: {error_detail}")
             
             elif output_format == 'pdf':
                 self.progress.emit(70, "Exportando a Word...")
@@ -164,7 +172,7 @@ class ReportGeneratorThread(QThread):
                 word_path = str(Path(self.output_path).with_suffix('.docx'))
                 
                 exporter = WordExporter(report)
-                success = exporter.export(word_path, tables, charts)
+                success = exporter.export(word_path, tables, charts, self.options)
                 
                 if not success:
                     self.error.emit("Error al generar el archivo Word intermedio")
@@ -194,12 +202,12 @@ class ReportGeneratorThread(QThread):
                 self.progress.emit(70, "Exportando a Excel...")
                 excel_path = str(base_path.with_suffix('.xlsx'))
                 excel_exp = ExcelExporter(report)
-                excel_exp.export(excel_path, tables, charts)
+                excel_exp.export(excel_path, tables, charts, self.options)
                 
                 self.progress.emit(80, "Exportando a Word...")
                 word_path = str(base_path.with_suffix('.docx'))
                 word_exp = WordExporter(report)
-                word_exp.export(word_path, tables, charts)
+                word_exp.export(word_path, tables, charts, self.options)
                 
                 self.progress.emit(90, "Convirtiendo a PDF...")
                 pdf_path = str(base_path.with_suffix('.pdf'))
@@ -328,6 +336,9 @@ class MainWindow(QMainWindow):
         # Tab: Vista Previa
         tab_preview = self._create_preview_tab()
         self.tabs.addTab(tab_preview, "👁️ Vista Previa")
+        
+        # Conectar cambio de tab para actualizar opciones
+        self.tabs.currentChanged.connect(self._on_tab_changed)
         
         main_layout.addWidget(self.tabs, 1)
         
@@ -511,6 +522,12 @@ class MainWindow(QMainWindow):
         self.check_matrices.setChecked(True)
         checks_layout.addWidget(self.check_matrices)
         
+        self.check_comparativos = QCheckBox("Cuadros comparativos")
+        self.check_comparativos.setChecked(True)
+        self.check_comparativos.setEnabled(False)  # Deshabilitado hasta que haya múltiples períodos
+        self.check_comparativos.setToolTip("Disponible solo en reportes comparativos con múltiples períodos")
+        checks_layout.addWidget(self.check_comparativos)
+        
         checks_layout.addStretch()
         options_layout.addLayout(checks_layout)
         
@@ -551,6 +568,9 @@ class MainWindow(QMainWindow):
         # Selector de períodos comparativos
         self.comparative_periods = ComparativePeriodSelector()
         content_layout.addWidget(self.comparative_periods)
+        
+        # Conectar señal para habilitar/deshabilitar checkbox de comparativos
+        self.comparative_periods.periods_changed.connect(self._on_periods_changed)
         
         content_layout.addStretch()
         
@@ -779,6 +799,7 @@ class MainWindow(QMainWindow):
             'incluir_cuadro_ref': self.check_cuadro_ref.isChecked(),
             'incluir_mencionados': self.check_mencionados.isChecked(),
             'incluir_matrices': self.check_matrices.isChecked(),
+            'incluir_comparativos': self.check_comparativos.isChecked() and self.check_comparativos.isEnabled(),
             'titulo': 'Informe Delictual',
             'jurisdiccion': ''
         }
@@ -856,6 +877,42 @@ class MainWindow(QMainWindow):
             f"Error durante la generación:\n\n{error}"
         )
         self.status_label.setText("❌ Error en la generación")
+    
+    def _on_periods_changed(self, periods: list):
+        """
+        Actualiza el estado del checkbox de comparativos según los períodos.
+        
+        Args:
+            periods: Lista de tuplas (fecha_inicio, fecha_fin)
+        """
+        has_multiple = len(periods) > 1
+        self.check_comparativos.setEnabled(has_multiple)
+        
+        if has_multiple:
+            self.check_comparativos.setToolTip("Incluir cuadros comparativos entre períodos")
+        else:
+            self.check_comparativos.setChecked(False)
+            self.check_comparativos.setToolTip("Disponible solo en reportes comparativos con múltiples períodos")
+    
+    def _on_tab_changed(self, index: int):
+        """
+        Actualiza el estado del checkbox de comparativos según el tab activo.
+        
+        Args:
+            index: Índice del tab activo (0=simple, 1=comparativo)
+        """
+        if index == 0:  # Tab de reporte simple
+            self.check_comparativos.setEnabled(False)
+            self.check_comparativos.setChecked(False)
+            self.check_comparativos.setToolTip("Disponible solo en reportes comparativos")
+        else:  # Tab de reporte comparativo
+            # Verificar si hay múltiples períodos
+            periods = self.comparative_periods.get_periods()
+            has_multiple = len(periods) > 1
+            self.check_comparativos.setEnabled(has_multiple)
+            if has_multiple:
+                self.check_comparativos.setChecked(True)
+                self.check_comparativos.setToolTip("Incluir cuadros comparativos entre períodos")
 
 
 def run_app():
