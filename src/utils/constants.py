@@ -72,36 +72,94 @@ WEEKDAY_TO_NAME = {i: dia for i, dia in enumerate(DIAS_SEMANA)}
 class CategoriaDelito(Enum):
     """Categorías principales de delitos."""
     ROBO = "ROBOS"
+    TENTATIVA_ROBO = "TENTATIVA DE ROBOS"
     HURTO = "HURTOS"
+    TENTATIVA_HURTO = "TENTATIVA DE HURTOS"
+    ESTAFA = "ESTAFAS"
     OTROS = "OTROS DELITOS"
 
 
 # Delitos considerados como ROBO
 DELITOS_ROBO = [
-    "ROBO_OPORTUNISTA",
-    "ROBO_ARREBATO",
-    "ROBO_DE_MOTOVEHICULOS",
-    "ROBO_AGRAVADO_DE_MOTOVEHICULOS",
-    "ROBO_CLAVERO_DE_AUTOS",
-    "TENTATIVA_DE_ROBO_ARREBATO",
-    "ROBO_AGRAVADO",
-    "ROBO_CON_ARMA",
+    "ROBO AGRAVADO ASALTANTE",
+    "ROBO AGRAVADO ASALTANTE EN BANDA",
+    "ROBO AGRAVADO DE MOTOVEHICULO",
+    "ROBO AGRAVADO PIRAÑA DE MOTOVEHICULO",
+    "ROBO AGRAVADO DE AUTOMOTOR",
+    "ROBO AGRAVADO ENTRADERA",
+    "ROBO AGRAVADO ARIETE",
+    "ROBO PIRAÑA DE MOTOVEHICULOS",
+    "ROBO PIRAÑA",
+    "ROBO ARREBATO",
+    "ROBO CLAVERO DE AUTOS",
+    "ROBO DE MOTOVEHICULOS",
+    "ROBO DE AUTOMOTOR",
+    "ROBO ESCRUCHE",
+    "ROBO BOQUETERO",
+    "ROBO ROMPE VIDRIO",
+    "ROBO OPORTUNISTA",
+]
+
+# Tentativas de robo
+DELITOS_TENTATIVA_ROBO = [
+    "TENTATIVA DE ROBO AGRAVADO ASALTANTE",
+    "TENTATIVA DE ROBO AGRAVADO ASALTANTE EN BANDA",
+    "TENTATIVA DE ROBO AGRAVADO DE MOTOVEHICULO",
+    "TENTATIVA DE ROBO AGRAVADO PIRAÑA DE MOTOVEHICULO",
+    "TENTATIVA DE ROBO AGRAVADO DE AUTOMOTOR",
+    "TENTATIVA DE ROBO AGRAVADO ENTRADERA",
+    "TENTATIVA DE ROBO AGRAVADO ARIETE",
+    "TENTATIVA DE ROBO PIRAÑA DE MOTOVEHICULOS",
+    "TENTATIVA DE ROBO PIRAÑA",
+    "TENTATIVA DE ROBO ARREBATO",
+    "TENTATIVA DE ROBO CLAVERO DE AUTOS",
+    "TENTATIVA DE ROBO DE MOTOVEHICULOS",
+    "TENTATIVA DE ROBO DE AUTOMOTOR",
+    "TENTATIVA DE ROBO ESCRUCHE",
+    "TENTATIVA DE ROBO BOQUETERO",
+    "TENTATIVA DE ROBO ROMPE VIDRIO",
+    "TENTATIVA DE ROBO OPORTUNISTA",
 ]
 
 # Delitos considerados como HURTO
 DELITOS_HURTO = [
-    "HURTO_OPORTUNISTA",
-    "HURTO_AUTOMOTOR",
-    "HURTO_DE_MOTOVEHICULOS",
-    "TENTATIVA_DE_HURTO",
+    "HURTO PUNGA",
+    "HURTO MECHERA",
+    "HURTO OPORTUNISTA",
+    "HURTO DE MOTOVEHICULO",
+    "HURTO DE AUTOMOTOR",
+    "HURTO INHIBIDOR DE ALARMAS",
+    "HURTO ESCALAMIENTO",
+    "HURTO VIUDA NEGRA",
+]
+
+# Tentativas de hurto
+DELITOS_TENTATIVA_HURTO = [
+    "TENTATIVA DE HURTO PUNGA",
+    "TENTATIVA DE HURTO MECHERA",
+    "TENTATIVA DE HURTO OPORTUNISTA",
+    "TENTATIVA DE HURTO DE MOTOVEHICULO",
+    "TENTATIVA DE HURTO DE AUTOMOTOR",
+    "TENTATIVA DE HURTO INHIBIDOR DE ALARMAS",
+    "TENTATIVA DE HURTO ESCALAMIENTO",
+    "TENTATIVA DE HURTO VIUDA NEGRA",
+]
+
+# Estafas
+DELITOS_ESTAFA = [
+    "ESTAFA CUENTO DEL TIO",
+    "TENTATIVA DE ESTAFA CUENTO DEL TIO",
 ]
 
 # Delitos que califican como "Robo Agravado" (requieren arma)
 DELITOS_ROBO_AGRAVADO = [
-    "ROBO_AGRAVADO",
-    "ROBO_AGRAVADO_DE_MOTOVEHICULOS",
-    "ROBO_CON_ARMA",
-    "ROBO_AGRAVADO_ASALTANTE",
+    "ROBO AGRAVADO ASALTANTE",
+    "ROBO AGRAVADO ASALTANTE EN BANDA",
+    "ROBO AGRAVADO DE MOTOVEHICULO",
+    "ROBO AGRAVADO PIRAÑA DE MOTOVEHICULO",
+    "ROBO AGRAVADO DE AUTOMOTOR",
+    "ROBO AGRAVADO ENTRADERA",
+    "ROBO AGRAVADO ARIETE",
 ]
 
 
@@ -115,20 +173,78 @@ class SimboloDelito:
     simbolo: str
     color: str
     descripcion: str
+    relleno: bool = True
 
 
+# Símbolos según cuadro de referencia oficial
 SIMBOLOS_DELITOS: Dict[str, SimboloDelito] = {
-    "ROBO_AGRAVADO_DE_MOTOVEHICULOS": SimboloDelito("▷", "#FFFF00", "Robo Agravado de Motovehículo"),
-    "ROBO_ARREBATO": SimboloDelito("△", "#FFFF00", "Robo Arrebato"),
-    "ROBO_CLAVERO_DE_AUTOS": SimboloDelito("◢", "#FFFF00", "Robo Clavero de Autos"),
-    "ROBO_DE_MOTOVEHICULOS": SimboloDelito("◣", "#FFFF00", "Robo de Motovehículos"),
-    "ROBO_OPORTUNISTA": SimboloDelito("▲", "#000000", "Robo Oportunista"),
-    "TENTATIVA_DE_ROBO_ARREBATO": SimboloDelito("◇", "#FFFF00", "Tentativa de Robo Arrebato"),
-    "HURTO_OPORTUNISTA": SimboloDelito("●", "#000000", "Hurto Oportunista"),
-    "HURTO_AUTOMOTOR": SimboloDelito("○", "#0000FF", "Hurto Automotor"),
-    "ESCLARECIDO_PARCIAL": SimboloDelito("◎", "#00FF00", "Hecho Esclarecido Parcialmente"),
-    "ESCLARECIDO_TOTAL": SimboloDelito("◉", "#00FF00", "Hecho Esclarecido Totalmente"),
-    "COMISARIA": SimboloDelito("Ⓟ", "#0000FF", "Comisaría Jurisdiccional"),
+    # === ROBOS AGRAVADOS (Triángulos rojos) ===
+    "ROBO AGRAVADO ASALTANTE": SimboloDelito("▲", "#FF0000", "Robo Agravado Asaltante", True),
+    "ROBO AGRAVADO ASALTANTE EN BANDA": SimboloDelito("△", "#FF0000", "Robo Agravado Asaltante en Banda", False),
+    "ROBO AGRAVADO DE MOTOVEHICULO": SimboloDelito("▷", "#FF0000", "Robo Agravado de Motovehículo", True),
+    "ROBO AGRAVADO PIRAÑA DE MOTOVEHICULO": SimboloDelito("▶", "#FF0000", "Robo Agravado Piraña de Motovehículo", True),
+    "ROBO AGRAVADO DE AUTOMOTOR": SimboloDelito("△", "#FF0000", "Robo Agravado de Automotor", False),
+    "ROBO AGRAVADO ENTRADERA": SimboloDelito("▷", "#FF0000", "Robo Agravado Entradera", False),
+    "ROBO AGRAVADO ARIETE": SimboloDelito("△", "#FF0000", "Robo Agravado Ariete", False),
+    
+    # === ROBOS SIMPLES (Triángulos/pentágonos verdes/amarillos/negros) ===
+    "ROBO PIRAÑA DE MOTOVEHICULOS": SimboloDelito("⬠", "#00FF00", "Robo Piraña de Motovehículos", True),
+    "ROBO PIRAÑA": SimboloDelito("⬡", "#00FF00", "Robo Piraña", True),
+    "ROBO ARREBATO": SimboloDelito("◐", "#FFFF00", "Robo Arrebato", True),
+    "ROBO CLAVERO DE AUTOS": SimboloDelito("△", "#00FF00", "Robo Clavero de Autos", False),
+    "ROBO DE MOTOVEHICULOS": SimboloDelito("△", "#00FF00", "Robo de Motovehículos", False),
+    "ROBO DE AUTOMOTOR": SimboloDelito("△", "#FFFFFF", "Robo de Automotor", False),
+    "ROBO ESCRUCHE": SimboloDelito("▲", "#00FF00", "Robo Escruche", True),
+    "ROBO BOQUETERO": SimboloDelito("▲", "#00FF00", "Robo Boquetero", True),
+    "ROBO ROMPE VIDRIO": SimboloDelito("▶", "#000000", "Robo Rompe Vidrio", True),
+    "ROBO OPORTUNISTA": SimboloDelito("▲", "#000000", "Robo Oportunista", True),
+    
+    # === TENTATIVAS DE ROBO (sin relleno) ===
+    "TENTATIVA DE ROBO AGRAVADO ASALTANTE": SimboloDelito("△", "#FF0000", "Tentativa de Robo Agravado Asaltante", False),
+    "TENTATIVA DE ROBO AGRAVADO ASALTANTE EN BANDA": SimboloDelito("△", "#FF0000", "Tentativa de Robo Agravado Asaltante en Banda", False),
+    "TENTATIVA DE ROBO AGRAVADO DE MOTOVEHICULO": SimboloDelito("▷", "#FF0000", "Tentativa de Robo Agravado de Motovehículo", False),
+    "TENTATIVA DE ROBO AGRAVADO PIRAÑA DE MOTOVEHICULO": SimboloDelito("▷", "#FF0000", "Tentativa de Robo Agravado Piraña de Motovehículo", False),
+    "TENTATIVA DE ROBO AGRAVADO DE AUTOMOTOR": SimboloDelito("△", "#FF0000", "Tentativa de Robo Agravado de Automotor", False),
+    "TENTATIVA DE ROBO AGRAVADO ENTRADERA": SimboloDelito("▷", "#FF0000", "Tentativa de Robo Agravado Entradera", False),
+    "TENTATIVA DE ROBO AGRAVADO ARIETE": SimboloDelito("△", "#FF0000", "Tentativa de Robo Agravado Ariete", False),
+    "TENTATIVA DE ROBO PIRAÑA DE MOTOVEHICULOS": SimboloDelito("⬡", "#00FF00", "Tentativa de Robo Piraña de Motovehículos", False),
+    "TENTATIVA DE ROBO PIRAÑA": SimboloDelito("⬡", "#00FF00", "Tentativa de Robo Piraña", False),
+    "TENTATIVA DE ROBO ARREBATO": SimboloDelito("◑", "#FFFF00", "Tentativa de Robo Arrebato", False),
+    "TENTATIVA DE ROBO CLAVERO DE AUTOS": SimboloDelito("△", "#00FF00", "Tentativa de Robo Clavero de Autos", False),
+    "TENTATIVA DE ROBO DE MOTOVEHICULOS": SimboloDelito("△", "#00FF00", "Tentativa de Robo de Motovehículos", False),
+    "TENTATIVA DE ROBO DE AUTOMOTOR": SimboloDelito("△", "#FFFFFF", "Tentativa de Robo de Automotor", False),
+    "TENTATIVA DE ROBO ESCRUCHE": SimboloDelito("△", "#00FF00", "Tentativa de Robo Escruche", False),
+    "TENTATIVA DE ROBO BOQUETERO": SimboloDelito("△", "#00FF00", "Tentativa de Robo Boquetero", False),
+    "TENTATIVA DE ROBO ROMPE VIDRIO": SimboloDelito("▷", "#000000", "Tentativa de Robo Rompe Vidrio", False),
+    "TENTATIVA DE ROBO OPORTUNISTA": SimboloDelito("△", "#000000", "Tentativa de Robo Oportunista", False),
+    
+    # === HURTOS (Círculos) ===
+    "HURTO PUNGA": SimboloDelito("●", "#0000FF", "Hurto Punga", True),
+    "HURTO MECHERA": SimboloDelito("●", "#FFFF00", "Hurto Mechera", True),
+    "HURTO OPORTUNISTA": SimboloDelito("●", "#000000", "Hurto Oportunista", True),
+    "HURTO DE MOTOVEHICULO": SimboloDelito("●", "#FF0000", "Hurto de Motovehículo", True),
+    "HURTO DE AUTOMOTOR": SimboloDelito("●", "#808080", "Hurto de Automotor", True),
+    "HURTO INHIBIDOR DE ALARMAS": SimboloDelito("○", "#000000", "Hurto Inhibidor de Alarmas", False),
+    "HURTO ESCALAMIENTO": SimboloDelito("●", "#FFA500", "Hurto Escalamiento", True),
+    "HURTO VIUDA NEGRA": SimboloDelito("●", "#000000", "Hurto Viuda Negra", True),
+    
+    # === TENTATIVAS DE HURTO (círculos sin relleno) ===
+    "TENTATIVA DE HURTO PUNGA": SimboloDelito("○", "#0000FF", "Tentativa de Hurto Punga", False),
+    "TENTATIVA DE HURTO MECHERA": SimboloDelito("○", "#FFFF00", "Tentativa de Hurto Mechera", False),
+    "TENTATIVA DE HURTO OPORTUNISTA": SimboloDelito("○", "#000000", "Tentativa de Hurto Oportunista", False),
+    "TENTATIVA DE HURTO DE MOTOVEHICULO": SimboloDelito("○", "#FF0000", "Tentativa de Hurto de Motovehículo", False),
+    "TENTATIVA DE HURTO DE AUTOMOTOR": SimboloDelito("○", "#808080", "Tentativa de Hurto de Automotor", False),
+    "TENTATIVA DE HURTO INHIBIDOR DE ALARMAS": SimboloDelito("○", "#000000", "Tentativa de Hurto Inhibidor de Alarmas", False),
+    "TENTATIVA DE HURTO ESCALAMIENTO": SimboloDelito("○", "#FFA500", "Tentativa de Hurto Escalamiento", False),
+    "TENTATIVA DE HURTO VIUDA NEGRA": SimboloDelito("○", "#000000", "Tentativa de Hurto Viuda Negra", False),
+    
+    # === ESTAFAS (Rombos azules) ===
+    "ESTAFA CUENTO DEL TIO": SimboloDelito("◆", "#0000FF", "Estafa Cuento del Tío", True),
+    "TENTATIVA DE ESTAFA CUENTO DEL TIO": SimboloDelito("◇", "#0000FF", "Tentativa de Estafa Cuento del Tío", False),
+    
+    # === INDICADORES ESPECIALES ===
+    "ESCLARECIDO": SimboloDelito("◉", "#00FF00", "Hecho Esclarecido", True),
+    "COMISARIA": SimboloDelito("Ⓟ", "#0000FF", "Comisaría Jurisdiccional", True),
 }
 
 
@@ -187,34 +303,73 @@ CLASIFICACION_APREHENDIDOS = [
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # MAPEO DE CAMPOS (CONFIGURACIÓN POR DEFECTO)
+# Nota: Los nombres de campo DBF están truncados a 10 caracteres
 # ═══════════════════════════════════════════════════════════════════════════════
 
 DEFAULT_FIELD_MAPPING = {
     "hechos": {
-        "fecha": ["FECHA", "FEC_HECHO", "fecha_hecho", "FECHA_HECHO"],
-        "hora": ["HORA", "HOR_HECHO", "hora_hecho", "HORA_HECHO"],
-        "delito": ["DELITO", "TIPO_DELITO", "modalidad", "MODALIDAD"],
-        "ambito": ["AMBITO", "AMB_OCURR", "lugar", "LUGAR_HECHO"],
-        "movilidad": ["MOVILIDAD", "MEDIO_MOV", "transporte", "MEDIO_MOVILIDAD"],
-        "arma": ["ARMA", "MEDIO_ARMA", "arma_utilizada", "ARMA_MEDIO"],
-        "esclarecido": ["ESCLAREC", "ESTADO", "resuelto", "ESCLARECIDO"],
-        "direccion": ["DIRECCION", "DOMICILIO", "CALLE", "UBICACION"],
+        # Campos truncados del DBF (máx 10 caracteres) primero
+        "nro_sumario": ["ID_N_SRIO", "Nº DE IMAGEN-SUMARIO Nº", "NRO_SUMAR", "SUMARIO"],
+        "jurisdiccion": ["JURIS_HECH", "JURISDICCION DONDE TUVO LUGAR EL DELITO", "JURISDICCION", "JURISD"],
+        "dependencia": ["DPCIA_INT", "DEPENDENCIA INTERVINIENTE", "DEPENDENCIA", "COMISARIA"],
+        "fecha": ["FECHA_HECH", "FECHA DEL DELITO", "FECHA", "FEC_HECHO"],
+        "dia_semana": ["DIA_HECHO", "DIA EN QUE OCURRIO EL HECHO", "DIA", "DIA_SEMANA"],
+        "hora": ["HORA_HECH", "HORA DEL DELITO", "HORA", "HORA_HECHO"],
+        "franja_horaria": ["FRAN_HORAR", "FRANJA HORARIA EN QUE OCURRIO EL DELITO", "FRANJA_HOR", "FRANJA"],
+        "direccion": ["DIREC_HECH", "DIRECCION DONDE OCURRIO EL DELITO", "DIRECCION", "DIR_HECHO", "CALLE"],
+        "ambito": ["LUGR_HECHO", "LUGAR DONDE TUVO LUGAR EL DELITO", "AMBITO", "LUGAR", "TIPO_LUGAR"],
+        "detalle_lugar": ["DET_LUG_HE", "DETALLE DEL LUGAR DONDE OCURRIO EL DELITO"],
+        "delito": ["DELITO", "DELITO COMETIDO", "TIPO_DELIT", "MODALIDAD"],
+        "modus_operandi": ["MODUS_OPER", "MODUS OPERANDI", "MODUS", "MOD_OPER"],
+        "movilidad": ["VEHIC_UTIL", "VEHICULOS UTILIZADOS", "MOVILIDAD", "VEHICULO", "MEDIO_MOV"],
+        "descripcion_vehiculo": ["DET_VEHIC", "DESCRIPCION DEL O LOS VEHICULOS UTILIZADOS"],
+        "arma": ["ARMA_UTILI", "ARMA UTILIZADA", "ARMA", "TIPO_ARMA", "MEDIO_ARMA"],
+        "detalle_arma": ["DET_ARMA", "DETALLE DEL ARMA UTILIZADA"],
+        "elemento_sustraido": ["ELEMN_SUST", "ELEMENTO SUSTRAIDO", "ELEM_SUST"],
+        "detalle_elemento": ["DET_ELE_SU", "DETALLE DEL ELEMENTO SUSTRAIDO"],
+        "resena_hecho": ["RESEN_HECH", "RESENA_HECHO"],
+        "sexo_victima": ["SEXO_VICTI", "SEXO DE LA VICTIMA", "SEXO_VICT"],
+        "edad_victima": ["EDAD_VICTI", "EDAD DE LA VICTIMA", "EDAD_VICT"],
+        "nombre_victima": ["AP_NOM_VIC", "APELLIDO Y NOMBRE DE LA VICTIMA"],
+        "dni_victima": ["DNI_VICTIM", "DNI_VICTIMA"],
+        "direccion_victima": ["DIREC_VICT", "DIRECCION_VICTIMA"],
+        "nombre_causante": ["AP_NOM_CAU", "APELLIDO Y NOMBRE DEL CAUSANTE", "CAUSANTE"],
+        "sexo_causante": ["SEXO_CAUS", "SEXO DEL CAUSANTE"],
+        "edad_causante": ["EDAD_CAUSA", "EDAD DEL CAUSANTE", "EDAD_CAUS"],
+        "dni_causante": ["DNI_CAUSAN", "DNI_CAUSANTE"],
+        "direccion_causante": ["DIREC_CAUS", "DIRECCION DEL CAUSANTE"],
+        "descripcion_causante": ["DESC_CAUS", "DESCRIPCION_CAUSANTE"],
+        "esclarecido": ["HECH_RESUE", "EL HECHO FUE RESUELTO", "ESCLAREC", "RESUELTO", "ESTADO"],
+        "resolucion_hecho": ["RESOL_HECH", "RESOLUCION_HECHO"],
+        "situacion_causante": ["SITUA_CAUS", "SITUACION DEL CAUSANTE", "SIT_CAUS"],
+        "mes": ["MES_DENU", "MES EN QUE OCURRIO EL DELITO", "MES"],
+        "barrio": ["PRDA_URBAN", "PARADA_URBANA", "BARRIO"],
+        "coordenada_x": ["X"],
+        "coordenada_y": ["Y"],
     },
     "mencionados": {
-        "alias": ["ALIAS", "NOMBRE", "UN_TAL", "MENCIONADO"],
-        "delito": ["DELITO", "TIPO_DELITO", "HECHO"],
-        "fecha": ["FECHA", "FEC_HECHO"],
-        "hora": ["HORA", "HOR_HECHO"],
-        "direccion": ["DIRECCION", "LUGAR", "DOMICILIO_HECHO"],
-        "datos": ["DATOS", "DESCRIPCION", "FILIACION", "DATOS_FILIATORIOS"],
+        "alias": ["ALIAS", "alias", "APODO", "TAL", "CONOCIDO"],
+        "nombre": ["AP_NOM_CAU", "APELLIDO Y NOMBRE DEL CAUSANTE", "NOMBRE", "CAUSANTE"],
+        "delito": ["DELITO", "DELITO COMETIDO", "TIPO_DELIT"],
+        "fecha": ["FECHA_HECH", "FECHA DEL DELITO", "FECHA"],
+        "hora": ["HORA_HECH", "HORA DEL DELITO", "HORA"],
+        "direccion": ["DIREC_HECH", "DIRECCION DONDE OCURRIO EL DELITO", "DIRECCION"],
+        "descripcion": ["DESC_CAUS", "DESCRIPCION", "FILIACION", "DATOS_FILIATORIOS"],
+        "nro_sumario": ["ID_N_SRIO", "NRO_SUMAR", "SUMARIO"],
     },
     "aprehendidos": {
-        "nombre": ["NOMBRE", "APELLIDO_NOMBRE", "IDENTIDAD"],
-        "clasificacion": ["CLASIFICACION", "CATEGORIA", "TIPO"],
-        "delito": ["DELITO", "CAUSA"],
-        "fecha": ["FECHA", "FEC_APREH"],
-        "edad": ["EDAD", "ANOS"],
-        "sexo": ["SEXO", "GENERO"],
+        "nombre": ["AP_NOM_CAU", "APELLIDO Y NOMBRE DEL CAUSANTE", "CAUSANTE", "NOMBRE"],
+        "edad": ["EDAD_CAUSA", "EDAD DEL CAUSANTE", "EDAD"],
+        "sexo": ["SEXO_CAUS", "SEXO DEL CAUSANTE", "SEXO"],
+        "delito": ["DELITO", "DELITO COMETIDO", "CAUSA"],
+        "fecha_aprehension": ["FECHA_HECH", "FECHA DEL DELITO", "FECHA", "FEC_APREH"],
+        "situacion": ["SITUA_CAUS", "SITUACION DEL CAUSANTE", "SITUACION"],
+        "direccion": ["DIREC_CAUS", "DIRECCION DEL CAUSANTE", "DIRECCION", "DOMICILIO"],
+        "descripcion": ["DESC_CAUS", "DESCRIPCION_CAUSANTE"],
+    },
+    "jurisdiccion": {
+        "nombre": ["JURIS_HECH", "JURISDICCION DONDE TUVO LUGAR EL DELITO", "JURISDICCION", "NOMBRE"],
+        "dependencia": ["DPCIA_INT", "DEPENDENCIA INTERVINIENTE", "DEPENDENCIA"],
     },
 }
 
@@ -281,11 +436,90 @@ CHART_CONFIG = {
 
 # Colores para gráficos de barras agrupadas por delito
 COLORES_DELITOS = {
-    "HURTO_OPORTUNISTA": "#9400D3",      # Violeta
-    "ROBO_OPORTUNISTA": "#32CD32",        # Verde lima
-    "ROBO_DE_MOTOVEHICULOS": "#0000CD",   # Azul medio
-    "ROBO_AGRAVADO_DE_MOTOVEHICULOS": "#800080",  # Púrpura
-    "ROBO_ARREBATO": "#FF0000",           # Rojo
-    "ROBO_CLAVERO_DE_AUTOS": "#FF8C00",   # Naranja oscuro
-    "TENTATIVA_DE_ROBO_ARREBATO": "#00CED1",  # Turquesa
+    # Robos agravados - tonos rojos
+    "ROBO AGRAVADO ASALTANTE": "#FF0000",
+    "ROBO AGRAVADO ASALTANTE EN BANDA": "#CC0000",
+    "ROBO AGRAVADO DE MOTOVEHICULO": "#FF3333",
+    "ROBO AGRAVADO PIRAÑA DE MOTOVEHICULO": "#FF6666",
+    "ROBO AGRAVADO DE AUTOMOTOR": "#990000",
+    "ROBO AGRAVADO ENTRADERA": "#FF4444",
+    "ROBO AGRAVADO ARIETE": "#CC3333",
+    # Robos simples - tonos verdes/amarillos
+    "ROBO PIRAÑA DE MOTOVEHICULOS": "#00FF00",
+    "ROBO PIRAÑA": "#33CC33",
+    "ROBO ARREBATO": "#FFFF00",
+    "ROBO CLAVERO DE AUTOS": "#66CC66",
+    "ROBO DE MOTOVEHICULOS": "#009900",
+    "ROBO DE AUTOMOTOR": "#006600",
+    "ROBO ESCRUCHE": "#00CC00",
+    "ROBO BOQUETERO": "#339933",
+    "ROBO ROMPE VIDRIO": "#333333",
+    "ROBO OPORTUNISTA": "#000000",
+    # Hurtos - tonos azules
+    "HURTO PUNGA": "#0000FF",
+    "HURTO MECHERA": "#CCCC00",
+    "HURTO OPORTUNISTA": "#333333",
+    "HURTO DE MOTOVEHICULO": "#CC0000",
+    "HURTO DE AUTOMOTOR": "#666666",
+    "HURTO INHIBIDOR DE ALARMAS": "#444444",
+    "HURTO ESCALAMIENTO": "#FF8800",
+    "HURTO VIUDA NEGRA": "#111111",
+    # Estafas
+    "ESTAFA CUENTO DEL TIO": "#0066FF",
+    "TENTATIVA DE ESTAFA CUENTO DEL TIO": "#3399FF",
 }
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# MODUS OPERANDI
+# ═══════════════════════════════════════════════════════════════════════════════
+
+MODUS_OPERANDI = [
+    "ASALTANTE",
+    "ASALTANTE EN BANDA",
+    "PIRAÑA",
+    "ARREBATO",
+    "ESCRUCHE",
+    "BOQUETERO",
+    "ROMPE VIDRIO",
+    "ENTRADERA",
+    "ARIETE",
+    "CLAVERO",
+    "INHIBIDOR DE ALARMAS",
+    "ESCALAMIENTO",
+    "VIUDA NEGRA",
+    "PUNGA",
+    "MECHERA",
+    "OPORTUNISTA",
+    "CUENTO DEL TIO",
+]
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# RESOLUCIÓN DE HECHOS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+RESOLUCION_HECHOS = {
+    "06-DETENCION_CIVIL": "Detención Civil",
+    "05-IDENTIFICADO": "Identificado",
+    "04-MENCIONADO": "Mencionado",
+    "03-APREHENDIDO": "Aprehendido",
+    "02-APREHENDIDO": "Aprehendido",
+    "01-SIN_RESOLVER": "Sin Resolver",
+}
+
+SITUACION_CAUSANTE = {
+    "02-APREHENDIDO": "Aprehendido",
+    "03-IDENTIFICADO": "Identificado",
+    "04-MENCIONADO": "Mencionado",
+    "01-PROFUGO": "Prófugo",
+}
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# RUTA SHAPEFILE POR DEFECTO
+# ═══════════════════════════════════════════════════════════════════════════════
+
+DEFAULT_SHAPEFILE_PATH = r"\\analisis-3\Analisis-3\MAPA DEL DELITO\MAPAS DEL DELITO POR JURISDICCIONES\CRIA AMAICHA DEL VALLE-URO\MAPA DELICTUAL CRIA  AMAICHA DEL VALLE-URO\MAPA DELICTUAL CRIA AMAICHA DEL VALLE-URO.shp"
+DEFAULT_JURISDICCION = "URO_COMISARIA_AMAICHA_DEL_VALLE"
+DEFAULT_DEPENDENCIA = "URO_COMISARIA_AMAICHA_DEL_VALLE"

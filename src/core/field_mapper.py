@@ -46,8 +46,24 @@ class FieldMapper:
         """
         try:
             with open(path, 'r', encoding='utf-8') as f:
-                mapping = json.load(f)
-            return cls(mapping)
+                config = json.load(f)
+            
+            # Verificar si el JSON tiene la nueva estructura con "mappings"
+            if "mappings" in config:
+                # Nueva estructura: extraer source_fields de cada campo
+                mapping = {}
+                for layer_type, fields in config["mappings"].items():
+                    mapping[layer_type] = {}
+                    for field_name, field_config in fields.items():
+                        if isinstance(field_config, dict) and "source_fields" in field_config:
+                            mapping[layer_type][field_name] = field_config["source_fields"]
+                        elif isinstance(field_config, list):
+                            # Compatibilidad con formato antiguo
+                            mapping[layer_type][field_name] = field_config
+                return cls(mapping)
+            else:
+                # Formato antiguo: usar directamente
+                return cls(config)
         except Exception as e:
             logger.warning(f"Error cargando mapeo desde {path}: {e}. Usando mapeo por defecto.")
             return cls()
@@ -115,13 +131,8 @@ class FieldMapper:
                 self._cache[cache_key] = result
                 return result
         
-        # Buscar coincidencia parcial
-        for name in possible_names:
-            name_upper = name.upper()
-            for avail_upper, avail_orig in available_upper.items():
-                if name_upper in avail_upper or avail_upper in name_upper:
-                    self._cache[cache_key] = avail_orig
-                    return avail_orig
+        # Nota: Se eliminó la búsqueda parcial porque causaba falsos positivos
+        # con los nombres de campo DBF truncados (10 caracteres máx)
         
         return None
     

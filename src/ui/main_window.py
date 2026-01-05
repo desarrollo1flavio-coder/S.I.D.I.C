@@ -17,7 +17,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, QThread, pyqtSignal, QTimer
 from PyQt6.QtGui import QAction, QFont, QIcon, QPixmap
 
-from .widgets import ShapefileSelector, PeriodSelector, ComparativePeriodSelector
+from .widgets import DropZoneSelector, PeriodSelector, ComparativePeriodSelector
 
 
 class ReportGeneratorThread(QThread):
@@ -464,8 +464,8 @@ class MainWindow(QMainWindow):
         content_layout = QVBoxLayout(content)
         content_layout.setSpacing(16)
         
-        # Selector de archivos
-        self.file_selector = ShapefileSelector()
+        # Selector de archivos (zona drag & drop)
+        self.file_selector = DropZoneSelector()
         content_layout.addWidget(self.file_selector)
         
         # Selector de período

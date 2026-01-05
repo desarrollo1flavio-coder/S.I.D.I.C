@@ -100,12 +100,19 @@ class ShapefileReader:
             'warnings': []
         }
         
-        path_obj = Path(path)
+        # Normalizar ruta (soporta UNC de Windows: \\servidor\...)
+        path_str = str(path).replace('/', '\\')
+        path_obj = Path(path_str)
         
-        # Verificar que existe
-        if not path_obj.exists():
+        # Verificar que existe (con soporte UNC)
+        try:
+            if not path_obj.exists():
+                result['valid'] = False
+                result['errors'].append(f"Archivo no encontrado: {path}")
+                return result
+        except OSError as e:
             result['valid'] = False
-            result['errors'].append(f"Archivo no encontrado: {path}")
+            result['errors'].append(f"Error accediendo a la ruta (verifique permisos de red): {e}")
             return result
         
         # Verificar extensión
@@ -116,26 +123,51 @@ class ShapefileReader:
         
         # Verificar archivos asociados
         required_extensions = ['.dbf', '.shx']
-        optional_extensions = ['.prj', '.cpg']
+        optional_extensions = ['.prj', '.cpg', '.qpj']  # .qpj es archivo de proyección de QGIS
         
         for ext in required_extensions:
             assoc_file = path_obj.with_suffix(ext)
-            if not assoc_file.exists():
+            try:
+                if not assoc_file.exists():
+                    result['valid'] = False
+                    result['errors'].append(f"Archivo requerido faltante: {assoc_file.name}")
+            except OSError:
                 result['valid'] = False
-                result['errors'].append(f"Archivo requerido faltante: {assoc_file.name}")
+                result['errors'].append(f"No se puede acceder a: {assoc_file.name}")
         
         for ext in optional_extensions:
             assoc_file = path_obj.with_suffix(ext)
-            if not assoc_file.exists():
-                result['warnings'].append(f"Archivo opcional faltante: {assoc_file.name}")
+            try:
+                if not assoc_file.exists():
+                    result['warnings'].append(f"Archivo opcional faltante: {assoc_file.name}")
+            except OSError:
+                pass  # Ignorar errores en archivos opcionales
         
         if not result['valid']:
             return result
         
-        # Intentar leer el shapefile
+        # Intentar leer el shapefile con diferentes encodings
+        gdf = None
+        encodings_to_try = ['utf-8', 'latin-1', 'cp1252', None]
+        last_error = None
+        
+        for encoding in encodings_to_try:
+            try:
+                if encoding:
+                    gdf = gpd.read_file(path_str, encoding=encoding)
+                else:
+                    gdf = gpd.read_file(path_str)
+                break  # Si funciona, salir del loop
+            except Exception as e:
+                last_error = e
+                continue
+        
+        if gdf is None:
+            result['valid'] = False
+            result['errors'].append(f"Error leyendo shapefile: {str(last_error)}")
+            return result
+        
         try:
-            gdf = gpd.read_file(path)
-            
             result['records'] = len(gdf)
             result['fields'] = list(gdf.columns)
             
@@ -201,8 +233,24 @@ class ShapefileReader:
                 f"Campos críticos faltantes: {map_validation['critical_missing']}"
             )
         
-        # Leer datos
-        gdf = gpd.read_file(path)
+        # Leer datos con encoding apropiado
+        path_str = str(path).replace('/', '\\\\')
+        gdf = None
+        for encoding in ['utf-8', 'latin-1', 'cp1252', None]:
+            try:
+                if encoding:
+                    gdf = gpd.read_file(path_str, encoding=encoding)
+                else:
+                    gdf = gpd.read_file(path_str)
+                break
+            except Exception:
+                continue
+        
+        if gdf is None:
+            validation['valid'] = False
+            validation['errors'].append("No se pudo leer el shapefile con ningún encoding")
+            return [], validation
+        
         records = []
         
         for idx, row in gdf.iterrows():
@@ -253,14 +301,24 @@ class ShapefileReader:
         }
         
         return CrimeRecord(
+            nro_sumario=str(get_value('nro_sumario') or '').strip(),
             fecha=parse_date(get_value('fecha')),
             hora=parse_time(get_value('hora')),
             delito=str(get_value('delito') or '').upper().strip(),
+            modus_operandi=str(get_value('modus_operandi') or '').upper().strip(),
             ambito=str(get_value('ambito') or '').upper().strip(),
             movilidad=str(get_value('movilidad') or '').upper().strip(),
             arma_medio=str(get_value('arma') or '').upper().strip(),
             esclarecido=str(get_value('esclarecido') or '').upper().strip(),
+            situacion_causante=str(get_value('situacion_causante') or '').upper().strip(),
             direccion=str(get_value('direccion') or '').strip(),
+            jurisdiccion=str(get_value('jurisdiccion') or '').upper().strip(),
+            dependencia=str(get_value('dependencia') or '').upper().strip(),
+            sexo_victima=str(get_value('sexo_victima') or '').upper().strip(),
+            edad_victima=str(get_value('edad_victima') or '').strip(),
+            nombre_causante=str(get_value('nombre_causante') or '').strip(),
+            sexo_causante=str(get_value('sexo_causante') or '').upper().strip(),
+            edad_causante=str(get_value('edad_causante') or '').strip(),
             coordenadas=coords,
             geometry=row.geometry if hasattr(row, 'geometry') else None,
             campos_extra=campos_extra

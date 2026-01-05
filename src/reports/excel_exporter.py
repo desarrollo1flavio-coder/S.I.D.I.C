@@ -210,12 +210,14 @@ class ExcelExporter:
             current_row += 1
         
         # Ajustar ancho de columnas
+        from openpyxl.utils import get_column_letter
         for col_idx, col_name in enumerate(df.columns, start=start_col):
             max_length = len(str(col_name))
             for row in df[col_name]:
                 max_length = max(max_length, len(str(row)))
             adjusted_width = min(max_length + 2, 50)
-            ws.column_dimensions[ws.cell(row=1, column=col_idx).column_letter].width = adjusted_width
+            col_letter = get_column_letter(col_idx)
+            ws.column_dimensions[col_letter].width = adjusted_width
         
         return current_row
     

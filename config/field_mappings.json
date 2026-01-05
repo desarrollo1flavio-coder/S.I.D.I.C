@@ -1,115 +1,294 @@
 {
-  "version": "1.0",
-  "description": "Configuración de mapeo de campos para S.I.D.I.C",
-  "notes": "Modifique estos valores según los nombres de campos en sus shapefiles de QGIS",
+  "version": "2.0",
+  "description": "Configuración de mapeo de campos para S.I.D.I.C - Comisaría Amaicha del Valle",
+  "notes": "Campos mapeados según estructura real del shapefile MAPA DELICTUAL CRIA AMAICHA DEL VALLE-URO (nombres DBF truncados a 10 caracteres)",
 
   "mappings": {
     "hechos": {
+      "nro_sumario": {
+        "source_fields": [
+          "ID_N_SRIO",
+          "Nº DE IMAGEN-SUMARIO Nº",
+          "NRO_SUMAR",
+          "SUMARIO"
+        ],
+        "type": "string",
+        "required": false,
+        "description": "Número de imagen-sumario"
+      },
+      "jurisdiccion": {
+        "source_fields": [
+          "JURIS_HECH",
+          "JURISDICCION DONDE TUVO LUGAR EL DELITO",
+          "JURISDICCION",
+          "JURISD"
+        ],
+        "type": "string",
+        "required": false,
+        "description": "Jurisdicción donde ocurrió el hecho"
+      },
+      "dependencia": {
+        "source_fields": [
+          "DPCIA_INT",
+          "DEPENDENCIA INTERVINIENTE",
+          "DEPENDENCIA",
+          "COMISARIA"
+        ],
+        "type": "string",
+        "required": false,
+        "description": "Dependencia policial interviniente"
+      },
       "fecha": {
         "source_fields": [
+          "FECHA_HECH",
+          "FECHA DEL DELITO",
           "FECHA",
-          "fecha",
-          "FEC_HECHO",
-          "FECHA_HECHO",
-          "fecha_hecho"
+          "FEC_HECHO"
         ],
         "type": "date",
-        "format": "%d/%m/%Y",
+        "format": "%d-%m-%Y",
         "required": true,
         "description": "Fecha del hecho delictual"
       },
+      "dia_semana": {
+        "source_fields": [
+          "DIA_HECHO",
+          "DIA EN QUE OCURRIO EL HECHO",
+          "DIA",
+          "DIA_SEMANA"
+        ],
+        "type": "string",
+        "required": false,
+        "description": "Día de la semana del hecho"
+      },
       "hora": {
-        "source_fields": ["HORA", "hora", "HORA_HECHO", "hora_hecho"],
+        "source_fields": ["HORA_HECH", "HORA DEL DELITO", "HORA", "HORA_HECHO"],
         "type": "time",
         "format": "%H:%M",
         "required": false,
         "description": "Hora del hecho delictual"
       },
-      "delito": {
+      "franja_horaria": {
         "source_fields": [
-          "DELITO",
-          "delito",
-          "TIPO_DELIT",
-          "tipo_delito",
-          "TIPODELIT"
+          "FRAN_HORAR",
+          "FRANJA HORARIA EN QUE OCURRIO EL DELITO",
+          "FRANJA_HOR",
+          "FRANJA"
         ],
         "type": "string",
-        "required": true,
-        "description": "Tipo de delito"
+        "required": false,
+        "description": "Franja horaria del hecho"
       },
-      "modalidad": {
-        "source_fields": ["MODALIDAD", "modalidad", "MODAL", "MOD_DELIT"],
+      "barrio": {
+        "source_fields": ["PRDA_URBAN", "PARADA_URBANA", "BARRIO"],
         "type": "string",
         "required": false,
-        "description": "Modalidad del delito"
+        "description": "Barrio o parada urbana"
       },
       "direccion": {
         "source_fields": [
+          "DIREC_HECH",
+          "DIRECCION DONDE OCURRIO EL DELITO",
           "DIRECCION",
-          "direccion",
-          "DOMICILIO",
-          "DIR_HECHO",
-          "CALLE"
+          "DIR_HECHO"
         ],
         "type": "string",
         "required": false,
         "description": "Dirección del hecho"
       },
+      "ambito": {
+        "source_fields": [
+          "LUGR_HECHO",
+          "LUGAR DONDE TUVO LUGAR EL DELITO",
+          "AMBITO",
+          "LUGAR"
+        ],
+        "type": "string",
+        "required": false,
+        "description": "Ámbito/lugar de ocurrencia (VIVIENDA, VIA_PUBLICA, etc.)"
+      },
+      "detalle_lugar": {
+        "source_fields": [
+          "DET_LUG_HE",
+          "DETALLE DEL LUGAR DONDE OCURRIO EL DELITO",
+          "DET_LUGAR"
+        ],
+        "type": "string",
+        "required": false,
+        "description": "Detalle adicional del lugar"
+      },
+      "delito": {
+        "source_fields": ["DELITO", "DELITO COMETIDO", "TIPO_DELIT"],
+        "type": "string",
+        "required": true,
+        "description": "Tipo de delito cometido"
+      },
+      "modus_operandi": {
+        "source_fields": ["MODUS_OPER", "MODUS OPERANDI", "MODUS", "MOD_OPER"],
+        "type": "string",
+        "required": false,
+        "description": "Modus operandi (ASALTANTE, ESCRUCHE, PIRAÑA, etc.)"
+      },
       "movilidad": {
-        "source_fields": ["MOVILIDAD", "movilidad", "MEDIO_MOV", "VEHICULO"],
+        "source_fields": [
+          "VEHIC_UTIL",
+          "VEHICULOS UTILIZADOS",
+          "MOVILIDAD",
+          "VEHICULO"
+        ],
         "type": "string",
         "required": false,
         "description": "Medio de movilidad utilizado"
       },
-      "arma": {
+      "descripcion_vehiculo": {
         "source_fields": [
-          "ARMA",
-          "arma",
-          "MEDIO_ARMA",
-          "TIPO_ARMA",
-          "ARMA_USADA"
+          "DET_VEHIC",
+          "DESCRIPCION DEL O LOS VEHICULOS UTILIZADOS"
         ],
         "type": "string",
         "required": false,
-        "description": "Arma o medio utilizado"
+        "description": "Descripción del vehículo utilizado"
       },
-      "ambito": {
+      "arma": {
+        "source_fields": ["ARMA_UTILI", "ARMA UTILIZADA", "ARMA", "TIPO_ARMA"],
+        "type": "string",
+        "required": false,
+        "description": "Arma utilizada (ARMA_BLANCA, ARMA_FUEGO, etc.)"
+      },
+      "detalle_arma": {
+        "source_fields": ["DET_ARMA", "DETALLE DEL ARMA UTILIZADA"],
+        "type": "string",
+        "required": false,
+        "description": "Detalle del arma utilizada"
+      },
+      "elemento_sustraido": {
+        "source_fields": ["ELEMN_SUST", "ELEMENTO SUSTRAIDO", "ELEM_SUST"],
+        "type": "string",
+        "required": false,
+        "description": "Elemento sustraído"
+      },
+      "detalle_elemento": {
+        "source_fields": ["DET_ELE_SU", "DETALLE DEL ELEMENTO SUSTRAIDO"],
+        "type": "string",
+        "required": false,
+        "description": "Detalle del elemento sustraído"
+      },
+      "resena_hecho": {
+        "source_fields": ["RESEN_HECH", "RESENA_HECHO"],
+        "type": "string",
+        "required": false,
+        "description": "Reseña del hecho"
+      },
+      "sexo_victima": {
+        "source_fields": ["SEXO_VICTI", "SEXO DE LA VICTIMA", "SEXO_VICT"],
+        "type": "string",
+        "required": false,
+        "description": "Sexo de la víctima"
+      },
+      "edad_victima": {
+        "source_fields": ["EDAD_VICTI", "EDAD DE LA VICTIMA", "EDAD_VICT"],
+        "type": "string",
+        "required": false,
+        "description": "Edad de la víctima"
+      },
+      "nombre_victima": {
+        "source_fields": ["AP_NOM_VIC", "APELLIDO Y NOMBRE DE LA VICTIMA"],
+        "type": "string",
+        "required": false,
+        "description": "Nombre de la víctima"
+      },
+      "dni_victima": {
+        "source_fields": ["DNI_VICTIM", "DNI_VICTIMA"],
+        "type": "string",
+        "required": false,
+        "description": "DNI de la víctima"
+      },
+      "direccion_victima": {
+        "source_fields": ["DIREC_VICT", "DIRECCION_VICTIMA"],
+        "type": "string",
+        "required": false,
+        "description": "Dirección de la víctima"
+      },
+      "nombre_causante": {
         "source_fields": [
-          "AMBITO",
-          "ambito",
-          "LUGAR",
-          "TIPO_LUGAR",
-          "AMB_OCURR"
+          "AP_NOM_CAU",
+          "APELLIDO Y NOMBRE DEL CAUSANTE",
+          "CAUSANTE"
         ],
         "type": "string",
         "required": false,
-        "description": "Ámbito de ocurrencia"
+        "description": "Nombre del causante"
+      },
+      "sexo_causante": {
+        "source_fields": ["SEXO_CAUS", "SEXO DEL CAUSANTE"],
+        "type": "string",
+        "required": false,
+        "description": "Sexo del causante"
+      },
+      "edad_causante": {
+        "source_fields": ["EDAD_CAUSA", "EDAD DEL CAUSANTE", "EDAD_CAUS"],
+        "type": "string",
+        "required": false,
+        "description": "Edad del causante"
+      },
+      "dni_causante": {
+        "source_fields": ["DNI_CAUSAN", "DNI_CAUSANTE"],
+        "type": "string",
+        "required": false,
+        "description": "DNI del causante"
+      },
+      "direccion_causante": {
+        "source_fields": ["DIREC_CAUS", "DIRECCION DEL CAUSANTE"],
+        "type": "string",
+        "required": false,
+        "description": "Dirección del causante"
+      },
+      "descripcion_causante": {
+        "source_fields": ["DESC_CAUS", "DESCRIPCION_CAUSANTE"],
+        "type": "string",
+        "required": false,
+        "description": "Descripción del causante"
       },
       "esclarecido": {
         "source_fields": [
-          "ESCLARECI",
-          "esclarecido",
-          "ESCLARE",
-          "ACLARADO",
+          "HECH_RESUE",
+          "EL HECHO FUE RESUELTO",
+          "ESCLAREC",
           "RESUELTO"
-        ],
-        "type": "boolean",
-        "true_values": ["SI", "S", "1", "TRUE", "ESCLARECIDO", "ACLARADO"],
-        "false_values": ["NO", "N", "0", "FALSE", "PENDIENTE"],
-        "required": false,
-        "description": "Si el hecho fue esclarecido"
-      },
-      "nro_sumario": {
-        "source_fields": [
-          "NRO_SUMAR",
-          "nro_sumario",
-          "SUMARIO",
-          "NRO_SUM",
-          "CAUSA"
         ],
         "type": "string",
         "required": false,
-        "description": "Número de sumario"
+        "description": "Estado de resolución del hecho"
+      },
+      "resolucion_hecho": {
+        "source_fields": ["RESOL_HECH", "RESOLUCION_HECHO"],
+        "type": "string",
+        "required": false,
+        "description": "Resolución del hecho"
+      },
+      "situacion_causante": {
+        "source_fields": ["SITUA_CAUS", "SITUACION DEL CAUSANTE", "SIT_CAUS"],
+        "type": "string",
+        "required": false,
+        "description": "Situación del causante (APREHENDIDO, IDENTIFICADO, etc.)"
+      },
+      "mes": {
+        "source_fields": ["MES_DENU", "MES EN QUE OCURRIO EL DELITO", "MES"],
+        "type": "string",
+        "required": false,
+        "description": "Mes del hecho"
+      },
+      "coordenada_x": {
+        "source_fields": ["X"],
+        "type": "float",
+        "required": false,
+        "description": "Coordenada X"
+      },
+      "coordenada_y": {
+        "source_fields": ["Y"],
+        "type": "float",
+        "required": false,
+        "description": "Coordenada Y"
       }
     },
 
@@ -121,56 +300,54 @@
         "description": "Alias o apodo"
       },
       "nombre": {
-        "source_fields": ["NOMBRE", "nombre", "NOMBRES"],
+        "source_fields": [
+          "AP_NOM_CAU",
+          "APELLIDO Y NOMBRE DEL CAUSANTE",
+          "NOMBRE",
+          "CAUSANTE"
+        ],
         "type": "string",
         "required": false,
         "description": "Nombre de la persona"
       },
-      "apellido": {
-        "source_fields": ["APELLIDO", "apellido", "APELLIDOS"],
-        "type": "string",
-        "required": false,
-        "description": "Apellido de la persona"
-      },
       "delito": {
-        "source_fields": ["DELITO", "delito", "TIPO_DELIT"],
+        "source_fields": ["DELITO", "DELITO COMETIDO", "TIPO_DELIT"],
         "type": "string",
         "required": true,
         "description": "Delito en el que fue mencionado"
       },
       "fecha": {
-        "source_fields": ["FECHA", "fecha", "FEC_HECHO"],
+        "source_fields": ["FECHA_HECH", "FECHA DEL DELITO", "FECHA"],
         "type": "date",
-        "format": "%d/%m/%Y",
+        "format": "%d-%m-%Y",
         "required": false,
         "description": "Fecha del hecho"
       },
       "hora": {
-        "source_fields": ["HORA", "hora"],
+        "source_fields": ["HORA_HECH", "HORA DEL DELITO", "HORA"],
         "type": "time",
         "format": "%H:%M",
         "required": false,
         "description": "Hora del hecho"
       },
       "direccion": {
-        "source_fields": ["DIRECCION", "direccion", "DOMICILIO", "DIR_HECHO"],
+        "source_fields": [
+          "DIREC_HECH",
+          "DIRECCION DONDE OCURRIO EL DELITO",
+          "DIRECCION"
+        ],
         "type": "string",
         "required": false,
         "description": "Dirección del hecho"
       },
-      "datos_filiatorios": {
-        "source_fields": [
-          "DATOS_FIL",
-          "datos_filiatorios",
-          "FILIACION",
-          "DESCRIPCION"
-        ],
+      "descripcion": {
+        "source_fields": ["DESC_CAUS", "DESCRIPCION", "FILIACION"],
         "type": "string",
         "required": false,
-        "description": "Datos filiatorios adicionales"
+        "description": "Descripción/datos filiatorios"
       },
       "nro_sumario": {
-        "source_fields": ["NRO_SUMAR", "nro_sumario", "SUMARIO"],
+        "source_fields": ["ID_N_SRIO", "NRO_SUMAR", "SUMARIO"],
         "type": "string",
         "required": false,
         "description": "Número de sumario"
@@ -179,81 +356,88 @@
 
     "aprehendidos": {
       "nombre": {
-        "source_fields": ["NOMBRE", "nombre", "NOMBRES"],
+        "source_fields": [
+          "AP_NOM_CAU",
+          "APELLIDO Y NOMBRE DEL CAUSANTE",
+          "NOMBRE",
+          "CAUSANTE"
+        ],
         "type": "string",
         "required": false,
         "description": "Nombre de la persona"
       },
-      "apellido": {
-        "source_fields": ["APELLIDO", "apellido", "APELLIDOS"],
-        "type": "string",
-        "required": false,
-        "description": "Apellido de la persona"
-      },
-      "alias": {
-        "source_fields": ["ALIAS", "alias", "APODO"],
-        "type": "string",
-        "required": false,
-        "description": "Alias o apodo"
-      },
       "edad": {
-        "source_fields": ["EDAD", "edad", "ANIOS"],
-        "type": "integer",
+        "source_fields": ["EDAD_CAUSA", "EDAD DEL CAUSANTE", "EDAD"],
+        "type": "string",
         "required": false,
         "description": "Edad de la persona"
       },
+      "sexo": {
+        "source_fields": ["SEXO_CAUS", "SEXO DEL CAUSANTE", "SEXO"],
+        "type": "string",
+        "required": false,
+        "description": "Sexo de la persona"
+      },
       "delito": {
-        "source_fields": ["DELITO", "delito", "TIPO_DELIT"],
+        "source_fields": ["DELITO", "DELITO COMETIDO", "TIPO_DELIT"],
         "type": "string",
         "required": true,
         "description": "Delito por el que fue aprehendido"
       },
       "fecha_aprehension": {
         "source_fields": [
+          "FECHA_HECH",
+          "FECHA DEL DELITO",
           "FECHA_APR",
-          "fecha_aprehension",
-          "FEC_APRE",
           "FECHA"
         ],
         "type": "date",
-        "format": "%d/%m/%Y",
+        "format": "%d-%m-%Y",
         "required": false,
         "description": "Fecha de aprehensión"
       },
       "situacion": {
-        "source_fields": ["SITUACION", "situacion", "ESTADO", "SIT_LEGAL"],
+        "source_fields": ["SITUA_CAUS", "SITUACION DEL CAUSANTE", "SITUACION"],
         "type": "string",
         "required": false,
         "description": "Situación legal"
       },
-      "reincidente": {
-        "source_fields": ["REINCIDEN", "reincidente", "REINCID"],
-        "type": "boolean",
-        "true_values": ["SI", "S", "1", "TRUE"],
-        "false_values": ["NO", "N", "0", "FALSE"],
-        "required": false,
-        "description": "Si es reincidente"
-      },
-      "clasificacion": {
-        "source_fields": ["CLASIFIC", "clasificacion", "CLASE", "TIPO_APR"],
+      "direccion": {
+        "source_fields": ["DIREC_CAUS", "DIRECCION DEL CAUSANTE", "DIRECCION"],
         "type": "string",
         "required": false,
-        "description": "Clasificación del aprehendido"
+        "description": "Dirección del aprehendido"
+      },
+      "descripcion": {
+        "source_fields": ["DESC_CAUS", "DESCRIPCION_CAUSANTE"],
+        "type": "string",
+        "required": false,
+        "description": "Descripción del aprehendido"
       }
     },
 
     "jurisdiccion": {
       "nombre": {
-        "source_fields": ["NOMBRE", "nombre", "JURISD", "NOM_JURISD"],
+        "source_fields": [
+          "JURIS_HECH",
+          "JURISDICCION DONDE TUVO LUGAR EL DELITO",
+          "JURISDICCION",
+          "NOMBRE",
+          "COMISARIA"
+        ],
         "type": "string",
         "required": true,
         "description": "Nombre de la jurisdicción"
       },
-      "codigo": {
-        "source_fields": ["CODIGO", "codigo", "COD_JURISD", "ID"],
+      "dependencia": {
+        "source_fields": [
+          "DPCIA_INT",
+          "DEPENDENCIA INTERVINIENTE",
+          "DEPENDENCIA"
+        ],
         "type": "string",
         "required": false,
-        "description": "Código de la jurisdicción"
+        "description": "Dependencia policial"
       }
     }
   },
@@ -261,42 +445,400 @@
   "delitos": {
     "categorias": {
       "ROBOS": [
-        "ROBO",
-        "ROBO AGRAVADO",
-        "ROBO CALIFICADO",
-        "ROBO A MANO ARMADA",
-        "ROBO CON ARMA",
-        "ROBO CON ARMA BLANCA",
-        "ROBO CON ARMA DE FUEGO",
-        "ROBO EN POBLADO Y BANDA",
+        "ROBO AGRAVADO ASALTANTE",
+        "ROBO AGRAVADO ASALTANTE EN BANDA",
+        "ROBO AGRAVADO DE MOTOVEHICULO",
+        "ROBO AGRAVADO PIRAÑA DE MOTOVEHICULO",
+        "ROBO AGRAVADO DE AUTOMOTOR",
+        "ROBO AGRAVADO ENTRADERA",
+        "ROBO AGRAVADO ARIETE",
+        "ROBO PIRAÑA DE MOTOVEHICULOS",
+        "ROBO PIRAÑA",
+        "ROBO ARREBATO",
+        "ROBO CLAVERO DE AUTOS",
+        "ROBO DE MOTOVEHICULOS",
         "ROBO DE AUTOMOTOR",
-        "ROBO DE MOTOVEHICULO",
-        "ROBO EN GRADO DE TENTATIVA"
+        "ROBO ESCRUCHE",
+        "ROBO BOQUETERO",
+        "ROBO ROMPE VIDRIO",
+        "ROBO OPORTUNISTA"
+      ],
+      "TENTATIVA_ROBOS": [
+        "TENTATIVA DE ROBO AGRAVADO ASALTANTE",
+        "TENTATIVA DE ROBO AGRAVADO ASALTANTE EN BANDA",
+        "TENTATIVA DE ROBO AGRAVADO DE MOTOVEHICULO",
+        "TENTATIVA DE ROBO AGRAVADO PIRAÑA DE MOTOVEHICULO",
+        "TENTATIVA DE ROBO AGRAVADO DE AUTOMOTOR",
+        "TENTATIVA DE ROBO AGRAVADO ENTRADERA",
+        "TENTATIVA DE ROBO AGRAVADO ARIETE",
+        "TENTATIVA DE ROBO PIRAÑA DE MOTOVEHICULOS",
+        "TENTATIVA DE ROBO PIRAÑA",
+        "TENTATIVA DE ROBO ARREBATO",
+        "TENTATIVA DE ROBO CLAVERO DE AUTOS",
+        "TENTATIVA DE ROBO DE MOTOVEHICULOS",
+        "TENTATIVA DE ROBO DE AUTOMOTOR",
+        "TENTATIVA DE ROBO ESCRUCHE",
+        "TENTATIVA DE ROBO BOQUETERO",
+        "TENTATIVA DE ROBO ROMPE VIDRIO",
+        "TENTATIVA DE ROBO OPORTUNISTA"
       ],
       "HURTOS": [
-        "HURTO",
-        "HURTO CALIFICADO",
-        "HURTO SIMPLE",
-        "HURTO DE AUTOMOTOR",
+        "HURTO PUNGA",
+        "HURTO MECHERA",
+        "HURTO OPORTUNISTA",
         "HURTO DE MOTOVEHICULO",
-        "HURTO EN GRADO DE TENTATIVA"
+        "HURTO DE AUTOMOTOR",
+        "HURTO INHIBIDOR DE ALARMAS",
+        "HURTO ESCALAMIENTO",
+        "HURTO VIUDA NEGRA"
+      ],
+      "TENTATIVA_HURTOS": [
+        "TENTATIVA DE HURTO PUNGA",
+        "TENTATIVA DE HURTO MECHERA",
+        "TENTATIVA DE HURTO OPORTUNISTA",
+        "TENTATIVA DE HURTO DE MOTOVEHICULO",
+        "TENTATIVA DE HURTO DE AUTOMOTOR",
+        "TENTATIVA DE HURTO INHIBIDOR DE ALARMAS",
+        "TENTATIVA DE HURTO ESCALAMIENTO",
+        "TENTATIVA DE HURTO VIUDA NEGRA"
+      ],
+      "ESTAFAS": [
+        "ESTAFA CUENTO DEL TIO",
+        "TENTATIVA DE ESTAFA CUENTO DEL TIO"
       ],
       "OTROS": []
     },
     "simbolos": {
-      "ROBO": "●",
-      "ROBO AGRAVADO": "▲",
-      "ROBO CON ARMA DE FUEGO": "★",
-      "ROBO CON ARMA BLANCA": "◆",
-      "ROBO DE AUTOMOTOR": "■",
-      "ROBO DE MOTOVEHICULO": "◎",
-      "HURTO": "○",
-      "HURTO CALIFICADO": "△",
-      "HURTO DE AUTOMOTOR": "□",
-      "HURTO DE MOTOVEHICULO": "◇",
-      "OTRO": "✕"
+      "ROBO AGRAVADO ASALTANTE": {
+        "simbolo": "▲",
+        "color": "#FF0000",
+        "relleno": true
+      },
+      "ROBO AGRAVADO ASALTANTE EN BANDA": {
+        "simbolo": "△",
+        "color": "#FF0000",
+        "relleno": false
+      },
+      "ROBO AGRAVADO DE MOTOVEHICULO": {
+        "simbolo": "▷",
+        "color": "#FF0000",
+        "relleno": true
+      },
+      "ROBO AGRAVADO PIRAÑA DE MOTOVEHICULO": {
+        "simbolo": "▶",
+        "color": "#FF0000",
+        "relleno": true
+      },
+      "ROBO AGRAVADO DE AUTOMOTOR": {
+        "simbolo": "△",
+        "color": "#FF0000",
+        "relleno": false
+      },
+      "ROBO AGRAVADO ENTRADERA": {
+        "simbolo": "▷",
+        "color": "#FF0000",
+        "relleno": false
+      },
+      "ROBO AGRAVADO ARIETE": {
+        "simbolo": "△",
+        "color": "#FF0000",
+        "relleno": false
+      },
+      "ROBO PIRAÑA DE MOTOVEHICULOS": {
+        "simbolo": "⬠",
+        "color": "#00FF00",
+        "relleno": true
+      },
+      "ROBO PIRAÑA": { "simbolo": "⬡", "color": "#00FF00", "relleno": true },
+      "ROBO ARREBATO": { "simbolo": "◐", "color": "#FFFF00", "relleno": true },
+      "ROBO CLAVERO DE AUTOS": {
+        "simbolo": "△",
+        "color": "#00FF00",
+        "relleno": false
+      },
+      "ROBO DE MOTOVEHICULOS": {
+        "simbolo": "△",
+        "color": "#00FF00",
+        "relleno": false
+      },
+      "ROBO DE AUTOMOTOR": {
+        "simbolo": "△",
+        "color": "#FFFFFF",
+        "relleno": false
+      },
+      "ROBO ESCRUCHE": { "simbolo": "▲", "color": "#00FF00", "relleno": true },
+      "ROBO BOQUETERO": { "simbolo": "▲", "color": "#00FF00", "relleno": true },
+      "ROBO ROMPE VIDRIO": {
+        "simbolo": "▶",
+        "color": "#000000",
+        "relleno": true
+      },
+      "ROBO OPORTUNISTA": {
+        "simbolo": "▲",
+        "color": "#000000",
+        "relleno": true
+      },
+
+      "TENTATIVA DE ROBO AGRAVADO ASALTANTE": {
+        "simbolo": "△",
+        "color": "#FF0000",
+        "relleno": false,
+        "borde": true
+      },
+      "TENTATIVA DE ROBO AGRAVADO ASALTANTE EN BANDA": {
+        "simbolo": "△",
+        "color": "#FF0000",
+        "relleno": false,
+        "borde": true
+      },
+      "TENTATIVA DE ROBO AGRAVADO DE MOTOVEHICULO": {
+        "simbolo": "▷",
+        "color": "#FF0000",
+        "relleno": false,
+        "borde": true
+      },
+      "TENTATIVA DE ROBO AGRAVADO PIRAÑA DE MOTOVEHICULO": {
+        "simbolo": "▷",
+        "color": "#FF0000",
+        "relleno": false,
+        "borde": true
+      },
+      "TENTATIVA DE ROBO AGRAVADO DE AUTOMOTOR": {
+        "simbolo": "△",
+        "color": "#FF0000",
+        "relleno": false,
+        "borde": true
+      },
+      "TENTATIVA DE ROBO AGRAVADO ENTRADERA": {
+        "simbolo": "▷",
+        "color": "#FF0000",
+        "relleno": false,
+        "borde": true
+      },
+      "TENTATIVA DE ROBO AGRAVADO ARIETE": {
+        "simbolo": "△",
+        "color": "#FF0000",
+        "relleno": false,
+        "borde": true
+      },
+      "TENTATIVA DE ROBO PIRAÑA DE MOTOVEHICULOS": {
+        "simbolo": "⬡",
+        "color": "#00FF00",
+        "relleno": false,
+        "borde": true
+      },
+      "TENTATIVA DE ROBO PIRAÑA": {
+        "simbolo": "⬡",
+        "color": "#00FF00",
+        "relleno": false,
+        "borde": true
+      },
+      "TENTATIVA DE ROBO ARREBATO": {
+        "simbolo": "◑",
+        "color": "#FFFF00",
+        "relleno": false,
+        "borde": true
+      },
+      "TENTATIVA DE ROBO CLAVERO DE AUTOS": {
+        "simbolo": "△",
+        "color": "#00FF00",
+        "relleno": false,
+        "borde": true
+      },
+      "TENTATIVA DE ROBO DE MOTOVEHICULOS": {
+        "simbolo": "△",
+        "color": "#00FF00",
+        "relleno": false,
+        "borde": true
+      },
+      "TENTATIVA DE ROBO DE AUTOMOTOR": {
+        "simbolo": "△",
+        "color": "#FFFFFF",
+        "relleno": false,
+        "borde": true
+      },
+      "TENTATIVA DE ROBO ESCRUCHE": {
+        "simbolo": "△",
+        "color": "#00FF00",
+        "relleno": false,
+        "borde": true
+      },
+      "TENTATIVA DE ROBO BOQUETERO": {
+        "simbolo": "△",
+        "color": "#00FF00",
+        "relleno": false,
+        "borde": true
+      },
+      "TENTATIVA DE ROBO ROMPE VIDRIO": {
+        "simbolo": "▷",
+        "color": "#000000",
+        "relleno": false,
+        "borde": true
+      },
+      "TENTATIVA DE ROBO OPORTUNISTA": {
+        "simbolo": "△",
+        "color": "#000000",
+        "relleno": false,
+        "borde": true
+      },
+
+      "HURTO PUNGA": { "simbolo": "●", "color": "#0000FF", "relleno": true },
+      "HURTO MECHERA": { "simbolo": "●", "color": "#FFFF00", "relleno": true },
+      "HURTO OPORTUNISTA": {
+        "simbolo": "●",
+        "color": "#000000",
+        "relleno": true
+      },
+      "HURTO DE MOTOVEHICULO": {
+        "simbolo": "●",
+        "color": "#FF0000",
+        "relleno": true
+      },
+      "HURTO DE AUTOMOTOR": {
+        "simbolo": "●",
+        "color": "#808080",
+        "relleno": true
+      },
+      "HURTO INHIBIDOR DE ALARMAS": {
+        "simbolo": "○",
+        "color": "#000000",
+        "relleno": false
+      },
+      "HURTO ESCALAMIENTO": {
+        "simbolo": "●",
+        "color": "#FFA500",
+        "relleno": true
+      },
+      "HURTO VIUDA NEGRA": {
+        "simbolo": "●",
+        "color": "#000000",
+        "relleno": true
+      },
+
+      "TENTATIVA DE HURTO PUNGA": {
+        "simbolo": "○",
+        "color": "#0000FF",
+        "relleno": false,
+        "borde": true
+      },
+      "TENTATIVA DE HURTO MECHERA": {
+        "simbolo": "○",
+        "color": "#FFFF00",
+        "relleno": false,
+        "borde": true
+      },
+      "TENTATIVA DE HURTO OPORTUNISTA": {
+        "simbolo": "○",
+        "color": "#000000",
+        "relleno": false,
+        "borde": true
+      },
+      "TENTATIVA DE HURTO DE MOTOVEHICULO": {
+        "simbolo": "○",
+        "color": "#FF0000",
+        "relleno": false,
+        "borde": true
+      },
+      "TENTATIVA DE HURTO DE AUTOMOTOR": {
+        "simbolo": "○",
+        "color": "#808080",
+        "relleno": false,
+        "borde": true
+      },
+      "TENTATIVA DE HURTO INHIBIDOR DE ALARMAS": {
+        "simbolo": "○",
+        "color": "#000000",
+        "relleno": false,
+        "borde": true
+      },
+      "TENTATIVA DE HURTO ESCALAMIENTO": {
+        "simbolo": "○",
+        "color": "#FFA500",
+        "relleno": false,
+        "borde": true
+      },
+      "TENTATIVA DE HURTO VIUDA NEGRA": {
+        "simbolo": "○",
+        "color": "#000000",
+        "relleno": false,
+        "borde": true
+      },
+
+      "ESTAFA CUENTO DEL TIO": {
+        "simbolo": "◆",
+        "color": "#0000FF",
+        "relleno": true
+      },
+      "TENTATIVA DE ESTAFA CUENTO DEL TIO": {
+        "simbolo": "◇",
+        "color": "#0000FF",
+        "relleno": false,
+        "borde": true
+      }
     }
   },
+
+  "modus_operandi": [
+    "ASALTANTE",
+    "ASALTANTE EN BANDA",
+    "PIRAÑA",
+    "ARREBATO",
+    "ESCRUCHE",
+    "BOQUETERO",
+    "ROMPE VIDRIO",
+    "ENTRADERA",
+    "ARIETE",
+    "CLAVERO",
+    "INHIBIDOR DE ALARMAS",
+    "ESCALAMIENTO",
+    "VIUDA NEGRA",
+    "PUNGA",
+    "MECHERA",
+    "OPORTUNISTA",
+    "CUENTO DEL TIO"
+  ],
+
+  "vehiculos": [
+    "{A_PIE}",
+    "MOTOCICLETA",
+    "AUTOMOVIL",
+    "BICICLETA",
+    "#NO_CONSTA"
+  ],
+
+  "armas": [
+    "{ARMA_BLANCA}",
+    "{ARMA_DE_FUEGO}",
+    "OBJETO_CONTUNDENTE",
+    "SIMULACRO_DE_ARMA",
+    "#NO_CONSTA"
+  ],
+
+  "lugares": [
+    "VIVIENDA",
+    "VIA_PUBLICA",
+    "COMERCIO",
+    "TRANSPORTE_PUBLICO",
+    "ESTABLECIMIENTO_EDUCATIVO",
+    "CASA",
+    "OTRO"
+  ],
+
+  "resolucion_hechos": [
+    "06-DETENCION_CIVIL",
+    "05-IDENTIFICADO",
+    "04-MENCIONADO",
+    "03-APREHENDIDO",
+    "02-APREHENDIDO",
+    "01-SIN_RESOLVER"
+  ],
+
+  "situacion_causante": [
+    "02-APREHENDIDO",
+    "03-IDENTIFICADO",
+    "04-MENCIONADO",
+    "01-PROFUGO"
+  ],
 
   "franjas_horarias": {
     "MADRUGADA": { "inicio": "00:00", "fin": "04:59" },
@@ -308,13 +850,13 @@
   },
 
   "dias_semana": [
-    "LUNES",
-    "MARTES",
-    "MIÉRCOLES",
-    "JUEVES",
-    "VIERNES",
-    "SÁBADO",
-    "DOMINGO"
+    "lunes",
+    "martes",
+    "miércoles",
+    "jueves",
+    "viernes",
+    "sábado",
+    "domingo"
   ],
 
   "colores_excel": {
@@ -330,5 +872,11 @@
       "fondo": "0000FF",
       "texto": "FFFFFF"
     }
+  },
+
+  "shapefile_default": {
+    "path": "\\\\analisis-3\\Analisis-3\\MAPA DEL DELITO\\MAPAS DEL DELITO POR JURISDICCIONES\\CRIA AMAICHA DEL VALLE-URO\\MAPA DELICTUAL CRIA  AMAICHA DEL VALLE-URO\\MAPA DELICTUAL CRIA AMAICHA DEL VALLE-URO.shp",
+    "jurisdiccion": "URO_COMISARIA_AMAICHA_DEL_VALLE",
+    "dependencia": "URO_COMISARIA_AMAICHA_DEL_VALLE"
   }
 }

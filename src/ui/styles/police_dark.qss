@@ -699,3 +699,116 @@ QFrame.stat-card QLabel.stat-label {
     color: #888888;
     font-size: 10pt;
 }
+/* ═══════════════════════════════════════════════════════════════════════
+   DROP ZONE SELECTOR - Zona de arrastrar y soltar
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Zona de drop principal */
+QFrame#dropZone {
+    background-color: #12121c;
+    border: 3px dashed #333344;
+    border-radius: 12px;
+    min-height: 180px;
+}
+
+QFrame#dropZone:hover {
+    border-color: #00d4ff;
+    background-color: #0d1520;
+}
+
+/* Estado cuando se arrastra encima */
+QFrame#dropZone[dragging="true"] {
+    border-color: #00d4ff;
+    border-style: solid;
+    background-color: rgba(0, 212, 255, 0.1);
+}
+
+/* Texto de la zona drop */
+QLabel#dropZoneText {
+    color: #888888;
+    font-size: 14pt;
+    font-weight: bold;
+}
+
+QLabel#dropZoneHint {
+    color: #555566;
+    font-size: 9pt;
+}
+
+/* Botón examinar en zona drop */
+QPushButton#dropZoneBrowse {
+    background-color: #00d4ff;
+    color: #0a0a12;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 24px;
+    font-weight: bold;
+    font-size: 11pt;
+}
+
+QPushButton#dropZoneBrowse:hover {
+    background-color: #00e8ff;
+}
+
+QPushButton#dropZoneBrowse:pressed {
+    background-color: #00a8cc;
+}
+
+/* Tabla de archivos cargados */
+QTableWidget#filesTable {
+    background-color: #12121c;
+    border: 1px solid #333344;
+    border-radius: 6px;
+    gridline-color: #333344;
+}
+
+QTableWidget#filesTable::item {
+    padding: 8px;
+    border-bottom: 1px solid #222233;
+}
+
+QTableWidget#filesTable::item:selected {
+    background-color: rgba(0, 212, 255, 0.2);
+}
+
+QTableWidget#filesTable QHeaderView::section {
+    background-color: #0d0d18;
+    color: #00d4ff;
+    border: none;
+    border-bottom: 2px solid #00d4ff;
+    padding: 10px 8px;
+    font-weight: bold;
+}
+
+/* ComboBox en la tabla */
+QTableWidget#filesTable QComboBox {
+    background-color: #0d0d18;
+    border: 1px solid #333344;
+    border-radius: 4px;
+    padding: 4px 8px;
+    color: #ffffff;
+}
+
+QTableWidget#filesTable QComboBox:hover {
+    border-color: #00d4ff;
+}
+
+QTableWidget#filesTable QComboBox::drop-down {
+    border: none;
+    width: 20px;
+}
+
+QTableWidget#filesTable QComboBox::down-arrow {
+    image: none;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 6px solid #00d4ff;
+    margin-right: 6px;
+}
+
+/* Indicador de estado general */
+QLabel#generalStatus {
+    font-size: 10pt;
+    font-weight: bold;
+    padding: 4px 8px;
+}

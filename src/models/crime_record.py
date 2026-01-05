@@ -11,6 +11,9 @@ from ..utils.constants import (
     CategoriaDelito,
     DELITOS_ROBO,
     DELITOS_HURTO,
+    DELITOS_TENTATIVA_ROBO,
+    DELITOS_TENTATIVA_HURTO,
+    DELITOS_ESTAFA,
     DELITOS_ROBO_AGRAVADO,
 )
 from ..utils.date_utils import get_franja_horaria, get_dia_semana
@@ -27,6 +30,7 @@ class CrimeRecord:
     
     # Identificación
     id: str = field(default_factory=lambda: str(uuid.uuid4())[:8])
+    nro_sumario: str = ""
     
     # Datos temporales
     fecha: Optional[date] = None
@@ -34,6 +38,7 @@ class CrimeRecord:
     
     # Clasificación del delito
     delito: str = ""
+    modus_operandi: str = ""
     ambito: str = ""
     
     # Medios utilizados
@@ -42,10 +47,22 @@ class CrimeRecord:
     
     # Estado
     esclarecido: str = ""
+    situacion_causante: str = ""
     
     # Ubicación
     direccion: str = ""
+    jurisdiccion: str = ""
+    dependencia: str = ""
     coordenadas: Optional[Tuple[float, float]] = None  # (lon, lat)
+    
+    # Datos de víctima
+    sexo_victima: str = ""
+    edad_victima: str = ""
+    
+    # Datos de causante
+    nombre_causante: str = ""
+    sexo_causante: str = ""
+    edad_causante: str = ""
     
     # Geometría original (para exportación)
     geometry: Any = None
@@ -82,16 +99,57 @@ class CrimeRecord:
     
     @property
     def categoria(self) -> CategoriaDelito:
-        """Categoría del delito (ROBO, HURTO, OTROS)."""
-        delito_upper = self.delito.upper()
+        """Categoría del delito (ROBO, TENTATIVA_ROBO, HURTO, TENTATIVA_HURTO, ESTAFA, OTROS)."""
+        delito_upper = self.delito.upper().strip()
         
-        for patron in DELITOS_ROBO:
-            if patron in delito_upper or delito_upper in patron:
+        # Verificar si es tentativa (contiene "TENTATIVA")
+        es_tentativa = "TENTATIVA" in delito_upper
+        
+        if es_tentativa:
+            # Tentativas de robo
+            for patron in DELITOS_TENTATIVA_ROBO:
+                if delito_upper == patron or delito_upper in patron or patron in delito_upper:
+                    return CategoriaDelito.TENTATIVA_ROBO
+            
+            # Tentativas de hurto
+            for patron in DELITOS_TENTATIVA_HURTO:
+                if delito_upper == patron or delito_upper in patron or patron in delito_upper:
+                    return CategoriaDelito.TENTATIVA_HURTO
+            
+            # Tentativas de estafa
+            if "ESTAFA" in delito_upper:
+                return CategoriaDelito.ESTAFA
+            
+            # Tentativa genérica de robo
+            if "ROBO" in delito_upper:
+                return CategoriaDelito.TENTATIVA_ROBO
+            
+            # Tentativa genérica de hurto
+            if "HURTO" in delito_upper:
+                return CategoriaDelito.TENTATIVA_HURTO
+        else:
+            # Estafas consumadas
+            for patron in DELITOS_ESTAFA:
+                if delito_upper == patron or patron in delito_upper:
+                    return CategoriaDelito.ESTAFA
+            
+            # Robos consumados
+            for patron in DELITOS_ROBO:
+                if delito_upper == patron or delito_upper in patron or patron in delito_upper:
+                    return CategoriaDelito.ROBO
+            
+            # Hurtos consumados
+            for patron in DELITOS_HURTO:
+                if delito_upper == patron or delito_upper in patron or patron in delito_upper:
+                    return CategoriaDelito.HURTO
+            
+            # Verificación genérica por palabra clave
+            if "ROBO" in delito_upper:
                 return CategoriaDelito.ROBO
-        
-        for patron in DELITOS_HURTO:
-            if patron in delito_upper or delito_upper in patron:
+            if "HURTO" in delito_upper:
                 return CategoriaDelito.HURTO
+            if "ESTAFA" in delito_upper:
+                return CategoriaDelito.ESTAFA
         
         return CategoriaDelito.OTROS
     
