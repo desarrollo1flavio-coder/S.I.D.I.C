@@ -146,7 +146,7 @@ class DropZoneSelector(QWidget):
         'hechos': {
             'label': 'Hechos Delictuales',
             'description': 'Shapefile principal con los hechos delictuales',
-            'required': True,
+            'required': False,  # Opcional: se pueden usar datos demo
             'patterns': ['hecho', 'delito', 'delict']
         },
         'mencionados': {

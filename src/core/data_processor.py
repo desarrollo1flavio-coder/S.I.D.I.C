@@ -353,3 +353,73 @@ class DataProcessor:
             'archivos_cargados': list(self._loaded_files.keys()),
             'validaciones': self._validation_results
         }
+    
+    # ═══════════════════════════════════════════════════════════════════════
+    # DATOS DE DEMOSTRACIÓN
+    # ═══════════════════════════════════════════════════════════════════════
+    
+    def load_sample_data(
+        self,
+        num_hechos: int = 50,
+        num_mencionados: int = 5,
+        num_aprehendidos: int = 8,
+        start_date: Optional[date] = None,
+        end_date: Optional[date] = None
+    ) -> Dict[str, int]:
+        """
+        Carga datos de demostración para probar el sistema.
+        
+        Args:
+            num_hechos: Número de hechos a generar (default: 50)
+            num_mencionados: Número de mencionados a generar (default: 5)
+            num_aprehendidos: Número de aprehendidos a generar (default: 8)
+            start_date: Fecha de inicio del período
+            end_date: Fecha de fin del período
+        
+        Returns:
+            Diccionario con cantidad de registros generados.
+        """
+        from ..utils.sample_data import (
+            generate_sample_hechos,
+            generate_sample_mencionados,
+            generate_sample_aprehendidos
+        )
+        
+        logger.info("Cargando datos de demostración...")
+        
+        self._hechos = generate_sample_hechos(num_hechos, start_date, end_date)
+        self._mencionados = generate_sample_mencionados(num_mencionados, start_date, end_date)
+        self._aprehendidos = generate_sample_aprehendidos(num_aprehendidos, start_date, end_date)
+        self._jurisdiccion_nombre = "DEMO - Jurisdicción de Ejemplo"
+        
+        # Marcar como datos demo
+        self._loaded_files['demo'] = {
+            'type': 'sample_data',
+            'hechos': num_hechos,
+            'mencionados': num_mencionados,
+            'aprehendidos': num_aprehendidos
+        }
+        
+        logger.info(f"Datos demo cargados: {num_hechos} hechos, {num_mencionados} mencionados, {num_aprehendidos} aprehendidos")
+        
+        return {
+            'hechos': len(self._hechos),
+            'mencionados': len(self._mencionados),
+            'aprehendidos': len(self._aprehendidos)
+        }
+    
+    @property
+    def is_demo_mode(self) -> bool:
+        """Indica si se están usando datos de demostración."""
+        return 'demo' in self._loaded_files
+    
+    def clear_data(self) -> None:
+        """Limpia todos los datos cargados."""
+        self._hechos = []
+        self._mencionados = []
+        self._aprehendidos = []
+        self._jurisdiccion = None
+        self._jurisdiccion_nombre = ""
+        self._loaded_files.clear()
+        self._validation_results.clear()
+        logger.info("Datos limpiados")

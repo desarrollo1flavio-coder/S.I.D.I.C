@@ -52,6 +52,13 @@ class ReportGeneratorThread(QThread):
         try:
             self.progress.emit(5, "Cargando módulos...")
             
+            # Agregar path del proyecto para imports
+            import sys
+            from pathlib import Path
+            project_root = str(Path(__file__).parent.parent.parent)
+            if project_root not in sys.path:
+                sys.path.insert(0, project_root)
+            
             from src.core.data_processor import DataProcessor
             from src.core.field_mapper import FieldMapper
             from src.reports.table_generator import TableGenerator
@@ -756,8 +763,29 @@ class MainWindow(QMainWindow):
     
     def _on_generate(self):
         """Genera el reporte."""
-        # Validar archivos
-        if not self.file_selector.validate():
+        # Verificar si hay datos cargados (archivos O datos demo)
+        has_files = bool(self.file_selector.get_files())
+        has_demo_data = hasattr(self, 'processor') and self.processor is not None and self.processor.is_loaded
+        
+        if not has_files and not has_demo_data:
+            # No hay ningún dato, ofrecer opciones
+            msg = QMessageBox(self)
+            msg.setIcon(QMessageBox.Icon.Warning)
+            msg.setWindowTitle("Sin Datos")
+            msg.setText("No hay datos cargados para generar el informe.")
+            msg.setInformativeText("Puede cargar archivos shapefile o usar datos de demostración.")
+            
+            btn_demo = msg.addButton("🎭 Cargar Datos Demo", QMessageBox.ButtonRole.ActionRole)
+            btn_cancel = msg.addButton(QMessageBox.StandardButton.Cancel)
+            
+            msg.exec()
+            
+            if msg.clickedButton() == btn_demo:
+                self._on_load_demo_data()
+            return
+        
+        # Validar archivos (solo si hay archivos seleccionados)
+        if has_files and not self.file_selector.validate():
             return
         
         # Validar período según el tab activo
@@ -865,17 +893,22 @@ class MainWindow(QMainWindow):
             self.status_label.setText("⚠️ Generación completada con advertencias")
     
     def _on_generation_error(self, error: str):
-        """Maneja errores de generación."""
+        """Maneja errores de generación con opción de ver detalles."""
         self.btn_generate.setEnabled(True)
         self.btn_preview.setEnabled(True)
         self.progress_bar.setVisible(False)
         self.progress_label.setVisible(False)
         
-        QMessageBox.critical(
-            self,
-            "Error",
-            f"Error durante la generación:\n\n{error}"
-        )
+        # Crear mensaje con detalles expandibles
+        msg = QMessageBox(self)
+        msg.setIcon(QMessageBox.Icon.Critical)
+        msg.setWindowTitle("Error en la Generación")
+        msg.setText("Ocurrió un error durante la generación del reporte.")
+        msg.setInformativeText("Haga clic en 'Mostrar detalles...' para más información.")
+        msg.setDetailedText(error)  # Botón "Ver Detalles" automático
+        msg.setStandardButtons(QMessageBox.StandardButton.Ok)
+        msg.exec()
+        
         self.status_label.setText("❌ Error en la generación")
     
     def _on_periods_changed(self, periods: list):

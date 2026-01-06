@@ -98,6 +98,44 @@ class CrimeRecord:
         return franja.display_name if franja else "#NO_CONSTA"
     
     @property
+    def delito_con_modalidad(self) -> str:
+        """
+        Combina el tipo de delito con su modalidad usando guiones bajos.
+        
+        Ejemplos:
+            - "050-HURTO" + "OPORTUNISTA" → "HURTO_OPORTUNISTA"
+            - "010-ROBO" + "ARREBATO" → "ROBO_ARREBATO"
+            - "030-ROBO_AGRAVADO" + "ASALTANTE" → "ROBO_AGRAVADO_ASALTANTE"
+        """
+        import re
+        
+        if not self.delito:
+            return ""
+        
+        # Extraer tipo base del delito (quitar prefijo numérico si existe)
+        delito_base = self.delito.upper().strip()
+        
+        # Detectar y limpiar prefijos como "050-", "010-", "030_", etc.
+        match = re.match(r'^\d{2,3}[-_]?(.+)$', delito_base)
+        if match:
+            delito_base = match.group(1).strip()
+        
+        # Normalizar: reemplazar espacios y guiones por guiones bajos
+        delito_base = delito_base.replace(' ', '_').replace('-', '_')
+        
+        # Si hay modus operandi, combinarlo con el delito base
+        if self.modus_operandi and self.modus_operandi.strip():
+            modus = self.modus_operandi.upper().strip()
+            # Normalizar modus operandi
+            modus = modus.replace(' ', '_').replace('-', '_')
+            
+            # Evitar duplicación si el modus ya está en el delito
+            if modus not in delito_base:
+                return f"{delito_base}_{modus}"
+        
+        return delito_base
+    
+    @property
     def categoria(self) -> CategoriaDelito:
         """Categoría del delito (ROBO, TENTATIVA_ROBO, HURTO, TENTATIVA_HURTO, ESTAFA, OTROS)."""
         delito_upper = self.delito.upper().strip()

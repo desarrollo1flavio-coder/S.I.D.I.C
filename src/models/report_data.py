@@ -68,8 +68,8 @@ class PeriodData:
     # ═══════════════════════════════════════════════════════════════════════
     
     def conteo_por_delito(self) -> Dict[str, int]:
-        """Conteo de hechos por tipo de delito."""
-        return dict(Counter(h.delito for h in self.hechos if h.delito))
+        """Conteo de hechos por tipo de delito CON MODALIDAD."""
+        return dict(Counter(h.delito_con_modalidad for h in self.hechos if h.delito_con_modalidad))
     
     def conteo_por_categoria(self) -> Dict[str, int]:
         """Conteo de hechos por categoría (ROBOS, HURTOS, OTROS)."""
