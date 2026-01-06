@@ -241,3 +241,130 @@ class FieldMapper:
             'critical_missing': critical_missing,
             'valid': len(critical_missing) == 0
         }
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# NORMALIZADOR DE DELITOS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Cache de aliases cargados
+_delito_aliases_cache: Optional[Dict[str, str]] = None
+
+
+def _load_delito_aliases() -> Dict[str, str]:
+    """Carga los aliases de delitos desde field_mappings.json."""
+    global _delito_aliases_cache
+    
+    if _delito_aliases_cache is not None:
+        return _delito_aliases_cache
+    
+    _delito_aliases_cache = {}
+    
+    try:
+        # Buscar archivo de configuración
+        config_paths = [
+            Path(__file__).parent.parent.parent / "config" / "field_mappings.json",
+            Path("config/field_mappings.json"),
+            Path("field_mappings.json"),
+        ]
+        
+        for config_path in config_paths:
+            if config_path.exists():
+                with open(config_path, 'r', encoding='utf-8') as f:
+                    config = json.load(f)
+                
+                if "delito_aliases" in config:
+                    # Ignorar comentarios (claves que empiezan con _)
+                    _delito_aliases_cache = {
+                        k.upper(): v.upper()
+                        for k, v in config["delito_aliases"].items()
+                        if not k.startswith("_")
+                    }
+                break
+                
+    except Exception as e:
+        logger.warning(f"Error cargando aliases de delitos: {e}")
+    
+    return _delito_aliases_cache
+
+
+def normalizar_delito(delito: Optional[str]) -> str:
+    """
+    Normaliza el nombre de un delito a su forma canónica.
+    
+    Aplica:
+    1. Conversión a mayúsculas
+    2. Limpieza de espacios extra
+    3. Mapeo de aliases conocidos
+    4. Normalización de caracteres especiales
+    
+    Args:
+        delito: Nombre del delito como viene del shapefile
+    
+    Returns:
+        Nombre normalizado del delito
+    
+    Example:
+        >>> normalizar_delito("robo agr. asaltante")
+        "ROBO AGRAVADO ASALTANTE"
+        >>> normalizar_delito("  HURTO  PUNGA  ")
+        "HURTO PUNGA"
+    """
+    if not delito:
+        return ""
+    
+    # Limpiar y normalizar
+    delito_clean = delito.strip().upper()
+    
+    # Eliminar espacios múltiples
+    import re
+    delito_clean = re.sub(r'\s+', ' ', delito_clean)
+    
+    # Reemplazar caracteres especiales comunes
+    delito_clean = delito_clean.replace('–', '-')  # En-dash to hyphen
+    delito_clean = delito_clean.replace('—', '-')  # Em-dash to hyphen
+    delito_clean = delito_clean.replace('Í', 'I')
+    delito_clean = delito_clean.replace('Ó', 'O')
+    delito_clean = delito_clean.replace('Á', 'A')
+    delito_clean = delito_clean.replace('É', 'E')
+    delito_clean = delito_clean.replace('Ú', 'U')
+    delito_clean = delito_clean.replace('Ñ', 'N')  # Para búsquedas, mantener Ñ puede ser problema
+    
+    # Cargar aliases
+    aliases = _load_delito_aliases()
+    
+    # Buscar en aliases
+    if delito_clean in aliases:
+        return aliases[delito_clean]
+    
+    # Si no hay alias, devolver limpio
+    return delito_clean
+
+
+def obtener_simbolo_delito(delito: str) -> Optional['SimboloDelito']:
+    """
+    Obtiene el símbolo correspondiente a un delito.
+    
+    Primero normaliza el nombre del delito y luego busca en SIMBOLOS_DELITOS.
+    
+    Args:
+        delito: Nombre del delito (puede estar sin normalizar)
+    
+    Returns:
+        SimboloDelito si existe, None si no se encuentra
+    """
+    from ..utils.constants import SIMBOLOS_DELITOS
+    
+    # Normalizar el delito
+    delito_normalizado = normalizar_delito(delito)
+    
+    # Buscar en el diccionario
+    if delito_normalizado in SIMBOLOS_DELITOS:
+        return SIMBOLOS_DELITOS[delito_normalizado]
+    
+    # Intentar búsqueda parcial para casos edge
+    for key, simbolo in SIMBOLOS_DELITOS.items():
+        if key in delito_normalizado or delito_normalizado in key:
+            return simbolo
+    
+    return None

@@ -95,7 +95,7 @@ class TableGenerator:
         return pd.DataFrame(data)
     
     # ═══════════════════════════════════════════════════════════════════════
-    # CUADRO DE REFERENCIA
+    # CUADRO DE REFERENCIA (Layout 2 columnas: Consumados | Tentativas)
     # ═══════════════════════════════════════════════════════════════════════
     
     def generar_cuadro_referencia(self) -> pd.DataFrame:
@@ -103,6 +103,7 @@ class TableGenerator:
         Genera el cuadro de referencia para mapas.
         
         Incluye símbolos, categorías, subtotales y totales.
+        Layout: 2 columnas (Consumados | Tentativas) como la imagen de referencia.
         """
         if not self.periodo:
             return pd.DataFrame()
@@ -115,16 +116,25 @@ class TableGenerator:
             texto = fila['texto']
             cantidad = fila['cantidad']
             
+            # Normalizar el delito antes de buscar
+            from ..core.field_mapper import normalizar_delito
+            texto_normalizado = normalizar_delito(texto)
+            
             # Obtener símbolo si es delito
             simbolo = ""
             color = ""
             if tipo == 'delito':
-                if texto in SIMBOLOS_DELITOS:
+                if texto_normalizado in SIMBOLOS_DELITOS:
+                    sim = SIMBOLOS_DELITOS[texto_normalizado]
+                    simbolo = sim.simbolo
+                    color = sim.color
+                elif texto in SIMBOLOS_DELITOS:
                     sim = SIMBOLOS_DELITOS[texto]
                     simbolo = sim.simbolo
                     color = sim.color
                 else:
                     simbolo = "●"
+                    color = "#888888"
             elif tipo == 'indicacion':
                 simbolo = "○"
             elif tipo == 'comisaria':
@@ -137,6 +147,64 @@ class TableGenerator:
                 'Cantidad': cantidad if cantidad is not None else '',
                 'Color': color
             })
+        
+        return pd.DataFrame(data)
+    
+    def generar_cuadro_referencia_doble_columna(self) -> pd.DataFrame:
+        """
+        Genera el cuadro de referencia con layout de 2 columnas.
+        
+        Columna izquierda: Delitos consumados
+        Columna derecha: Tentativas correspondientes
+        
+        Returns:
+            DataFrame con columnas:
+            - Símbolo_Consumado, Delito_Consumado, Cant_Consumado, Color_Consumado
+            - Símbolo_Tentativa, Delito_Tentativa, Cant_Tentativa, Color_Tentativa
+        """
+        from ..utils.constants import ORDEN_DELITOS_CONSUMADOS, ORDEN_DELITOS_TENTATIVAS
+        from ..core.field_mapper import normalizar_delito
+        
+        if not self.periodo:
+            return pd.DataFrame()
+        
+        # Obtener conteo de delitos
+        conteo = self.periodo.conteo_por_delito()
+        
+        # Normalizar claves del conteo
+        conteo_normalizado = {}
+        for k, v in conteo.items():
+            k_norm = normalizar_delito(k)
+            if k_norm in conteo_normalizado:
+                conteo_normalizado[k_norm] += v
+            else:
+                conteo_normalizado[k_norm] = v
+        
+        data = []
+        
+        # Iterar sobre las listas ordenadas
+        for i, delito_cons in enumerate(ORDEN_DELITOS_CONSUMADOS):
+            delito_tent = ORDEN_DELITOS_TENTATIVAS[i] if i < len(ORDEN_DELITOS_TENTATIVAS) else ""
+            
+            # Consumado
+            sim_cons = SIMBOLOS_DELITOS.get(delito_cons)
+            cant_cons = conteo_normalizado.get(delito_cons, 0)
+            
+            # Tentativa
+            sim_tent = SIMBOLOS_DELITOS.get(delito_tent)
+            cant_tent = conteo_normalizado.get(delito_tent, 0)
+            
+            row = {
+                'Símbolo': sim_cons.simbolo if sim_cons else '',
+                'Delito Consumado': delito_cons.replace('_', ' '),
+                'Cant': cant_cons,
+                'Color': sim_cons.color if sim_cons else '',
+                'Símbolo_T': sim_tent.simbolo if sim_tent else '',
+                'Tentativa': delito_tent.replace('TENTATIVA DE ', '').replace('_', ' ') if delito_tent else '',
+                'Cant_T': cant_tent,
+                'Color_T': sim_tent.color if sim_tent else '',
+            }
+            data.append(row)
         
         return pd.DataFrame(data)
     

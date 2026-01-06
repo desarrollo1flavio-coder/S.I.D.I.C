@@ -182,6 +182,91 @@ class WordExporter:
         except Exception as e:
             print(f"Error insertando imagen: {e}")
     
+    def _hex_to_rgb(self, hex_color: str) -> RGBColor:
+        """Convierte color hexadecimal a RGBColor."""
+        hex_color = hex_color.lstrip('#')
+        if len(hex_color) != 6:
+            return RGBColor(0, 0, 0)  # Negro por defecto
+        r = int(hex_color[0:2], 16)
+        g = int(hex_color[2:4], 16)
+        b = int(hex_color[4:6], 16)
+        return RGBColor(r, g, b)
+    
+    def _add_cuadro_referencia(self, df: pd.DataFrame, title: str = "CUADRO DE REFERENCIA"):
+        """
+        Agrega tabla de cuadro de referencia con símbolos coloreados.
+        
+        Args:
+            df: DataFrame con columnas Símbolo, Descripción, Cantidad, Color
+            title: Título de la tabla
+        """
+        if df.empty:
+            return
+        
+        self._add_heading(title, level=2)
+        
+        # Columnas a mostrar (sin Color)
+        display_cols = ['Símbolo', 'Descripción', 'Cantidad']
+        
+        # Crear tabla
+        n_rows = len(df) + 1
+        n_cols = len(display_cols)
+        
+        table = self.document.add_table(rows=n_rows, cols=n_cols)
+        table.style = 'Table Grid'
+        table.alignment = WD_TABLE_ALIGNMENT.CENTER
+        
+        # Encabezados
+        header_row = table.rows[0]
+        for col_idx, col_name in enumerate(display_cols):
+            cell = header_row.cells[col_idx]
+            cell.text = col_name
+            self._set_cell_shading(cell, 'FF0000')
+            for paragraph in cell.paragraphs:
+                paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                for run in paragraph.runs:
+                    run.bold = True
+                    run.font.color.rgb = RGBColor(255, 255, 255)
+                    run.font.size = Pt(10)
+        
+        # Datos con símbolos coloreados
+        for row_idx, (_, row) in enumerate(df.iterrows()):
+            table_row = table.rows[row_idx + 1]
+            color_hex = row.get('Color', '') if 'Color' in row else ''
+            
+            for col_idx, col_name in enumerate(display_cols):
+                cell = table_row.cells[col_idx]
+                value = row.get(col_name, '')
+                
+                # Limpiar celda
+                cell.text = ""
+                p = cell.paragraphs[0]
+                run = p.add_run(str(value) if value is not None else "")
+                
+                # Aplicar color al símbolo (primera columna)
+                if col_idx == 0 and color_hex:
+                    rgb_color = self._hex_to_rgb(color_hex)
+                    run.font.color.rgb = rgb_color
+                    run.font.size = Pt(14)
+                    run.bold = True
+                    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                    
+                    # Para colores claros, poner fondo oscuro
+                    if color_hex.upper() in ['#FFFFFF', '#FFFF00', 'FFFFFF', 'FFFF00']:
+                        self._set_cell_shading(cell, '000000')
+                else:
+                    run.font.size = Pt(9)
+                    p.alignment = WD_ALIGN_PARAGRAPH.CENTER if col_idx == 2 else WD_ALIGN_PARAGRAPH.LEFT
+                
+                # Alternar colores de fondo (excepto columna símbolo si tiene fondo oscuro)
+                if col_idx > 0 or not (color_hex.upper() in ['#FFFFFF', '#FFFF00', 'FFFFFF', 'FFFF00']):
+                    bg_color = 'FFFFFF' if row_idx % 2 == 0 else 'F0F0F0'
+                    if col_idx > 0:
+                        self._set_cell_shading(cell, bg_color)
+        
+        # Espacio después
+        self.document.add_paragraph()
+    
     # ═══════════════════════════════════════════════════════════════════════
     # SECCIONES DEL DOCUMENTO
     # ═══════════════════════════════════════════════════════════════════════
@@ -295,12 +380,10 @@ class WordExporter:
             # Resumen
             self._add_resumen()
             
-            # Cuadro de referencia
+            # Cuadro de referencia (con símbolos coloreados)
             if incluir_cuadro_ref and 'cuadro_referencia' in tables:
                 df = tables['cuadro_referencia']
-                # Simplificar para Word
-                df_simple = df[['Símbolo', 'Descripción', 'Cantidad']].copy()
-                self._add_table(df_simple, "CUADRO DE REFERENCIA")
+                self._add_cuadro_referencia(df, "CUADRO DE REFERENCIA")
             
             # Delitos con modalidades
             if 'delitos' in tables:

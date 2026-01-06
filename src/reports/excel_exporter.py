@@ -311,6 +311,75 @@ class ExcelExporter:
             if chart_bytes:
                 self._insert_image(ws, chart_bytes, f'A{final_row + 2}')
     
+    def _create_cuadro_referencia_sheet(
+        self,
+        name: str,
+        title: str,
+        df: pd.DataFrame
+    ):
+        """
+        Crea hoja de cuadro de referencia con símbolos coloreados.
+        
+        Esta versión especial aplica el color del símbolo a la celda.
+        """
+        ws = self.workbook.create_sheet(title=name[:31])
+        
+        # Título
+        n_cols = len(df.columns) if not df.empty else 4
+        self._add_title(ws, title, 1, 1, n_cols)
+        
+        # Período
+        if self.report.periodo_principal:
+            ws.cell(row=2, column=1, value=self.report.periodo_principal.rango_fechas)
+            ws.cell(row=2, column=1).font = Font(bold=True, color='0000FF')
+        
+        if df.empty:
+            return
+        
+        # Escribir encabezados (sin columna Color)
+        current_row = 4
+        headers = [col for col in df.columns if col != 'Color']
+        for col_idx, col_name in enumerate(headers, start=1):
+            ws.cell(row=current_row, column=col_idx, value=col_name)
+        self._apply_header_style(ws, current_row, 1, len(headers))
+        current_row += 1
+        
+        # Escribir datos con símbolos coloreados
+        for _, row in df.iterrows():
+            color_hex = row.get('Color', '')
+            
+            col_idx = 1
+            for col_name in headers:
+                cell = ws.cell(row=current_row, column=col_idx, value=row[col_name])
+                
+                # Aplicar estilo base
+                cell.alignment = Alignment(horizontal='center' if col_idx == 1 else 'left', vertical='center')
+                cell.border = Border(
+                    left=Side(style='thin'),
+                    right=Side(style='thin'),
+                    top=Side(style='thin'),
+                    bottom=Side(style='thin')
+                )
+                
+                # Aplicar color al símbolo (primera columna)
+                if col_idx == 1 and color_hex:
+                    # Convertir color hex a formato Excel (sin #)
+                    excel_color = color_hex.replace('#', '')
+                    # Para colores muy claros (blanco, amarillo), usar fondo negro
+                    if excel_color.upper() in ['FFFFFF', 'FFFF00']:
+                        cell.fill = PatternFill(start_color='000000', end_color='000000', fill_type='solid')
+                    cell.font = Font(bold=True, color=excel_color, size=14)
+                
+                col_idx += 1
+            
+            current_row += 1
+        
+        # Ajustar anchos de columna
+        ws.column_dimensions['A'].width = 8   # Símbolo
+        ws.column_dimensions['B'].width = 12  # Tipo
+        ws.column_dimensions['C'].width = 45  # Descripción
+        ws.column_dimensions['D'].width = 12  # Cantidad
+    
     # ═══════════════════════════════════════════════════════════════════════
     # EXPORTACIÓN PRINCIPAL
     # ═══════════════════════════════════════════════════════════════════════
@@ -348,9 +417,9 @@ class ExcelExporter:
             # Hoja de resumen
             self._create_resumen_sheet()
             
-            # Cuadro de referencia
+            # Cuadro de referencia (con símbolos coloreados)
             if incluir_cuadro_ref and 'cuadro_referencia' in tables:
-                self._create_table_sheet(
+                self._create_cuadro_referencia_sheet(
                     "Cuadro Referencia",
                     "CUADRO DE REFERENCIA",
                     tables['cuadro_referencia']
