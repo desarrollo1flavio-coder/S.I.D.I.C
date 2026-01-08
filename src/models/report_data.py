@@ -178,6 +178,45 @@ class PeriodData:
         
         return matriz
     
+    def matriz_delito_modalidad_dia(self) -> Dict[str, Dict[str, int]]:
+        """
+        Matriz de delitos CON MODALIDAD por día de la semana.
+        
+        Returns:
+            {delito_con_modalidad: {día: cantidad}}
+        """
+        delitos = sorted(set(h.delito_con_modalidad for h in self.hechos if h.delito_con_modalidad))
+        matriz = {
+            delito: {dia: 0 for dia in DIAS_SEMANA}
+            for delito in delitos
+        }
+        
+        for h in self.hechos:
+            if h.delito_con_modalidad and h.dia_semana:
+                matriz[h.delito_con_modalidad][h.dia_semana] += 1
+        
+        return matriz
+    
+    def matriz_delito_modalidad_franja(self) -> Dict[str, Dict[str, int]]:
+        """
+        Matriz de delitos CON MODALIDAD por franja horaria.
+        
+        Returns:
+            {delito_con_modalidad: {franja: cantidad}}
+        """
+        franjas = [f.display_name for f in FranjaHoraria]
+        delitos = sorted(set(h.delito_con_modalidad for h in self.hechos if h.delito_con_modalidad))
+        matriz = {
+            delito: {franja: 0 for franja in franjas}
+            for delito in delitos
+        }
+        
+        for h in self.hechos:
+            if h.delito_con_modalidad and h.franja_horaria:
+                matriz[h.delito_con_modalidad][h.franja_horaria.display_name] += 1
+        
+        return matriz
+    
     # ═══════════════════════════════════════════════════════════════════════
     # CUADRO DE REFERENCIA
     # ═══════════════════════════════════════════════════════════════════════

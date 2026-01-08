@@ -392,12 +392,13 @@ class TableGenerator:
     
     def generar_matriz_delito_dia(self) -> pd.DataFrame:
         """
-        Genera matriz de delitos por día de la semana.
+        Genera matriz de delitos CON MODALIDAD por día de la semana.
         """
         if not self.periodo:
             return pd.DataFrame()
         
-        matriz = self.periodo.matriz_delito_dia()
+        # Usar matriz con modalidades
+        matriz = self.periodo.matriz_delito_modalidad_dia()
         
         if not matriz:
             return pd.DataFrame()
@@ -428,12 +429,13 @@ class TableGenerator:
     
     def generar_matriz_delito_franja(self) -> pd.DataFrame:
         """
-        Genera matriz de delitos por franja horaria.
+        Genera matriz de delitos CON MODALIDAD por franja horaria.
         """
         if not self.periodo:
             return pd.DataFrame()
         
-        matriz = self.periodo.matriz_delito_franja()
+        # Usar matriz con modalidades
+        matriz = self.periodo.matriz_delito_modalidad_franja()
         
         if not matriz:
             return pd.DataFrame()
