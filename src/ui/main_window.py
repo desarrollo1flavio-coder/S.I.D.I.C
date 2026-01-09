@@ -488,7 +488,11 @@ class MainWindow(QMainWindow):
         
         # Selector de período
         self.period_selector = PeriodSelector()
+        self.period_selector.set_file_selector(self.file_selector)
         content_layout.addWidget(self.period_selector)
+        
+        # Conectar señal de cambio de archivos para actualizar conteos
+        self.file_selector.files_changed.connect(self._on_files_changed)
         
         # Opciones de exportación
         options_group = QGroupBox("⚙️ OPCIONES DE EXPORTACIÓN")
@@ -574,6 +578,7 @@ class MainWindow(QMainWindow):
         
         # Selector de períodos comparativos
         self.comparative_periods = ComparativePeriodSelector()
+        self.comparative_periods.set_file_selector(self.file_selector)
         content_layout.addWidget(self.comparative_periods)
         
         # Conectar señal para habilitar/deshabilitar checkbox de comparativos
@@ -790,13 +795,23 @@ class MainWindow(QMainWindow):
         
         # Validar período según el tab activo
         if self.tabs.currentIndex() == 0:  # Reporte simple
-            if not self.period_selector.validate():
-                QMessageBox.warning(self, "Error", "El período seleccionado no es válido.")
+            is_valid, error_msg = self.period_selector.validate()
+            if not is_valid:
+                QMessageBox.warning(
+                    self, 
+                    "Error de Validación", 
+                    f"El período seleccionado no es válido.\n\n{error_msg}"
+                )
                 return
             periods = [self.period_selector.get_period()]
         else:  # Reporte comparativo
-            if not self.comparative_periods.validate():
-                QMessageBox.warning(self, "Error", "Los períodos seleccionados no son válidos.")
+            is_valid, error_msg = self.comparative_periods.validate()
+            if not is_valid:
+                QMessageBox.warning(
+                    self, 
+                    "Error de Validación", 
+                    f"Los períodos seleccionados no son válidos.\n\n{error_msg}"
+                )
                 return
             periods = self.comparative_periods.get_periods()
         
@@ -910,6 +925,17 @@ class MainWindow(QMainWindow):
         msg.exec()
         
         self.status_label.setText("❌ Error en la generación")
+    
+    def _on_files_changed(self, files: dict):
+        """
+        Actualiza los conteos de hechos cuando cambian los archivos cargados.
+        
+        Args:
+            files: Diccionario con rutas de archivos
+        """
+        # Actualizar conteos en selectores de período
+        self.period_selector.update_counts()
+        self.comparative_periods.update_counts()
     
     def _on_periods_changed(self, periods: list):
         """

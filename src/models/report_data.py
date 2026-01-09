@@ -225,18 +225,20 @@ class PeriodData:
         """
         Genera el cuadro de referencia para mapas.
         
-        Agrupa por categoría (ROBOS, HURTOS) y muestra subtotales.
+        Agrupa por categoría (ROBOS, TENTATIVA ROBOS, HURTOS, TENTATIVA HURTOS, ESTAFAS)
+        y muestra subtotales.
         """
-        conteo = self.conteo_por_delito()
+        conteo = self.conteo_por_delito()  # Usa delito_con_modalidad
         categorias = self.conteo_por_categoria()
         esclarecidos = self.conteo_esclarecimiento()
         
         filas = []
         
-        # ROBOS
+        # ROBOS CONSUMADOS
         robos = [
             (delito, cant) for delito, cant in conteo.items()
-            if any(h.delito == delito and h.categoria == CategoriaDelito.ROBO for h in self.hechos)
+            if any(h.delito_con_modalidad == delito and h.categoria == CategoriaDelito.ROBO 
+                   for h in self.hechos)
         ]
         if robos:
             filas.append({"tipo": "categoria", "texto": "ROBOS", "cantidad": None})
@@ -248,10 +250,27 @@ class PeriodData:
                 "cantidad": categorias.get(CategoriaDelito.ROBO.value, 0)
             })
         
-        # HURTOS
+        # TENTATIVAS DE ROBO
+        tentativas_robo = [
+            (delito, cant) for delito, cant in conteo.items()
+            if any(h.delito_con_modalidad == delito and h.categoria == CategoriaDelito.TENTATIVA_ROBO 
+                   for h in self.hechos)
+        ]
+        if tentativas_robo:
+            filas.append({"tipo": "categoria", "texto": "TENTATIVAS DE ROBO", "cantidad": None})
+            for delito, cant in sorted(tentativas_robo, key=lambda x: -x[1]):
+                filas.append({"tipo": "delito", "texto": delito, "cantidad": cant})
+            filas.append({
+                "tipo": "subtotal",
+                "texto": "SUBTOTAL - TENTATIVAS ROBO",
+                "cantidad": categorias.get(CategoriaDelito.TENTATIVA_ROBO.value, 0)
+            })
+        
+        # HURTOS CONSUMADOS
         hurtos = [
             (delito, cant) for delito, cant in conteo.items()
-            if any(h.delito == delito and h.categoria == CategoriaDelito.HURTO for h in self.hechos)
+            if any(h.delito_con_modalidad == delito and h.categoria == CategoriaDelito.HURTO 
+                   for h in self.hechos)
         ]
         if hurtos:
             filas.append({"tipo": "categoria", "texto": "HURTOS", "cantidad": None})
@@ -261,6 +280,38 @@ class PeriodData:
                 "tipo": "subtotal",
                 "texto": "SUBTOTAL - HURTOS",
                 "cantidad": categorias.get(CategoriaDelito.HURTO.value, 0)
+            })
+        
+        # TENTATIVAS DE HURTO
+        tentativas_hurto = [
+            (delito, cant) for delito, cant in conteo.items()
+            if any(h.delito_con_modalidad == delito and h.categoria == CategoriaDelito.TENTATIVA_HURTO 
+                   for h in self.hechos)
+        ]
+        if tentativas_hurto:
+            filas.append({"tipo": "categoria", "texto": "TENTATIVAS DE HURTO", "cantidad": None})
+            for delito, cant in sorted(tentativas_hurto, key=lambda x: -x[1]):
+                filas.append({"tipo": "delito", "texto": delito, "cantidad": cant})
+            filas.append({
+                "tipo": "subtotal",
+                "texto": "SUBTOTAL - TENTATIVAS HURTO",
+                "cantidad": categorias.get(CategoriaDelito.TENTATIVA_HURTO.value, 0)
+            })
+        
+        # ESTAFAS
+        estafas = [
+            (delito, cant) for delito, cant in conteo.items()
+            if any(h.delito_con_modalidad == delito and h.categoria == CategoriaDelito.ESTAFA 
+                   for h in self.hechos)
+        ]
+        if estafas:
+            filas.append({"tipo": "categoria", "texto": "ESTAFAS", "cantidad": None})
+            for delito, cant in sorted(estafas, key=lambda x: -x[1]):
+                filas.append({"tipo": "delito", "texto": delito, "cantidad": cant})
+            filas.append({
+                "tipo": "subtotal",
+                "texto": "SUBTOTAL - ESTAFAS",
+                "cantidad": categorias.get(CategoriaDelito.ESTAFA.value, 0)
             })
         
         # TOTAL

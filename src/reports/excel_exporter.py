@@ -539,10 +539,36 @@ class ExcelExporter:
             
             # Guardar
             Path(output_path).parent.mkdir(parents=True, exist_ok=True)
-            self.workbook.save(output_path)
+            
+            # Intentar guardar con manejo de archivo bloqueado
+            try:
+                self.workbook.save(output_path)
+            except PermissionError as pe:
+                # El archivo puede estar abierto en Excel u otra app
+                # Intentar con nombre alternativo
+                from datetime import datetime
+                base_path = Path(output_path)
+                alt_name = f"{base_path.stem}_{datetime.now().strftime('%H%M%S')}{base_path.suffix}"
+                alt_path = base_path.parent / alt_name
+                try:
+                    self.workbook.save(str(alt_path))
+                    self._last_error = f"Archivo guardado como: {alt_name} (el original estaba bloqueado)"
+                    return True
+                except Exception:
+                    raise PermissionError(
+                        f"No se puede guardar el archivo. "
+                        f"Por favor cierre el archivo '{base_path.name}' si está abierto en Excel "
+                        f"o elija otra ubicación."
+                    ) from pe
             
             return True
         
+        except PermissionError as e:
+            self._last_error = str(e)
+            print(f"Error de permisos: {e}")
+            return False
+        
         except Exception as e:
             print(f"Error exportando a Excel: {e}")
+            self._last_error = str(e)
             return False

@@ -177,94 +177,156 @@ class SimboloDelito:
 
 
 # Símbolos según cuadro de referencia oficial
-# IMPORTANTE: Los símbolos y colores están definidos según la imagen de referencia policial
+# IMPORTANTE: Usando símbolos ASCII compatibles con Excel/Word
+# Triángulos: A (relleno), a (vacío) | Círculos: O (relleno), o (vacío) | Cuadrados: # (relleno), = (vacío)
 SIMBOLOS_DELITOS: Dict[str, SimboloDelito] = {
     # ═══════════════════════════════════════════════════════════════════════
-    # ROBOS CONSUMADOS (columna izquierda de la imagen)
+    # ROBOS CONSUMADOS (triángulos con relleno - letra A)
     # ═══════════════════════════════════════════════════════════════════════
     
-    # Robos Agravados
-    "ROBO AGRAVADO ASALTANTE": SimboloDelito("▲", "#FF0000", "Robo Agravado Asaltante", True),
-    "ROBO AGRAVADO ASALTANTE EN BANDA": SimboloDelito("△", "#FFFF00", "Robo Agravado Asaltante en Banda", False),
-    "ROBO AGRAVADO DE MOTOVEHICULO": SimboloDelito("▷", "#00FF00", "Robo Agravado de Motovehículo", True),
-    "ROBO AGRAVADO PIRAÑA DE MOTOVEHICULO": SimboloDelito("▶", "#FF0000", "Robo Agravado Piraña de Motovehículo", True),
-    "ROBO AGRAVADO DE AUTOMOTOR": SimboloDelito("▷", "#FFFFFF", "Robo Agravado de Automotor", False),
-    "ROBO AGRAVADO ENTRADERA": SimboloDelito("▷", "#00FF00", "Robo Agravado Entradera", True),
-    "ROBO AGRAVADO ARIETE": SimboloDelito("▶", "#0000FF", "Robo Agravado Ariete", True),
+    # Robos Agravados (triángulos rellenos)
+    "ROBO AGRAVADO ASALTANTE": SimboloDelito("A", "#FF0000", "Robo Agravado Asaltante", True),
+    "ROBO AGRAVADO ASALTANTE EN BANDA": SimboloDelito("A", "#FFFF00", "Robo Agravado Asaltante en Banda", True),
+    "ROBO AGRAVADO DE MOTOVEHICULO": SimboloDelito("A", "#00FF00", "Robo Agravado de Motovehículo", True),
+    "ROBO AGRAVADO PIRAÑA DE MOTOVEHICULO": SimboloDelito("A", "#FF0000", "Robo Agravado Piraña de Motovehículo", True),
+    "ROBO AGRAVADO DE AUTOMOTOR": SimboloDelito("A", "#808080", "Robo Agravado de Automotor", True),
+    "ROBO AGRAVADO ENTRADERA": SimboloDelito("A", "#00FF00", "Robo Agravado Entradera", True),
+    "ROBO AGRAVADO ARIETE": SimboloDelito("A", "#0000FF", "Robo Agravado Ariete", True),
     
-    # Robos Simples
-    "ROBO PIRAÑA DE MOTOVEHICULOS": SimboloDelito("⬠", "#00FF00", "Robo Piraña de Motovehículos", True),
-    "ROBO PIRAÑA": SimboloDelito("⬡", "#0000FF", "Robo Piraña", True),
-    "ROBO ARREBATO": SimboloDelito("△", "#FFFF00", "Robo Arrebato", False),
-    "ROBO CLAVERO DE AUTOS": SimboloDelito("△", "#00FF00", "Robo Clavero de Autos", False),
-    "ROBO DE MOTOVEHICULOS": SimboloDelito("△", "#00FF00", "Robo de Motovehículos", False),
-    "ROBO DE AUTOMOTOR": SimboloDelito("△", "#FFFFFF", "Robo de Automotor", False),
-    "ROBO ESCRUCHE": SimboloDelito("■", "#FF0000", "Robo Escruche", True),
-    "ROBO BOQUETERO": SimboloDelito("■", "#00FF00", "Robo Boquetero", True),
-    "ROBO ROMPE VIDRIO": SimboloDelito("▶", "#0000FF", "Robo Rompe Vidrio", True),
-    "ROBO OPORTUNISTA": SimboloDelito("▲", "#000000", "Robo Oportunista", True),
-    
-    # ═══════════════════════════════════════════════════════════════════════
-    # TENTATIVAS DE ROBO (columna derecha de la imagen - símbolos sin relleno)
-    # ═══════════════════════════════════════════════════════════════════════
-    
-    "TENTATIVA DE ROBO AGRAVADO ASALTANTE": SimboloDelito("△", "#FF0000", "Tentativa de Robo Agravado Asaltante", False),
-    "TENTATIVA DE ROBO AGRAVADO ASALTANTE EN BANDA": SimboloDelito("△", "#FFFF00", "Tentativa de Robo Agravado Asaltante en Banda", False),
-    "TENTATIVA DE ROBO AGRAVADO DE MOTOVEHICULO": SimboloDelito("▷", "#00FF00", "Tentativa de Robo Agravado de Motovehículo", False),
-    "TENTATIVA DE ROBO AGRAVADO PIRAÑA DE MOTOVEHICULO": SimboloDelito("▷", "#FF0000", "Tentativa de Robo Agravado Piraña de Motovehículo", False),
-    "TENTATIVA DE ROBO AGRAVADO DE AUTOMOTOR": SimboloDelito("▷", "#FFFFFF", "Tentativa de Robo Agravado de Automotor", False),
-    "TENTATIVA DE ROBO AGRAVADO ENTRADERA": SimboloDelito("▷", "#00FF00", "Tentativa de Robo Agravado Entradera", False),
-    "TENTATIVA DE ROBO AGRAVADO ARIETE": SimboloDelito("▷", "#0000FF", "Tentativa de Robo Agravado Ariete", False),
-    "TENTATIVA DE ROBO PIRAÑA DE MOTOVEHICULO": SimboloDelito("⬡", "#00FF00", "Tentativa de Robo Piraña de Motovehículo", False),
-    "TENTATIVA DE ROBO PIRAÑA": SimboloDelito("⬡", "#0000FF", "Tentativa de Robo Piraña", False),
-    "TENTATIVA DE ROBO ARREBATO": SimboloDelito("△", "#FFFF00", "Tentativa de Robo Arrebato", False),
-    "TENTATIVA DE ROBO CLAVERO DE AUTOS": SimboloDelito("△", "#00FF00", "Tentativa de Robo Clavero de Autos", False),
-    "TENTATIVA DE ROBO DE MOTOVEHICULOS": SimboloDelito("△", "#00FF00", "Tentativa de Robo de Motovehículos", False),
-    "TENTATIVA DE ROBO DE AUTOMOTOR": SimboloDelito("△", "#FFFFFF", "Tentativa de Robo de Automotor", False),
-    "TENTATIVA DE ROBO ESCRUCHE": SimboloDelito("□", "#FF0000", "Tentativa de Robo Escruche", False),
-    "TENTATIVA DE ROBO BOQUETERO": SimboloDelito("□", "#00FF00", "Tentativa de Robo Boquetero", False),
-    "TENTATIVA DE ROBO ROMPE VIDRIO": SimboloDelito("▷", "#0000FF", "Tentativa de Robo Rompe Vidrio", False),
-    "TENTATIVA DE ROBO OPORTUNISTA": SimboloDelito("△", "#000000", "Tentativa de Robo Oportunista", False),
+    # Robos Simples (triángulos rellenos con diferentes colores)
+    "ROBO PIRAÑA DE MOTOVEHICULOS": SimboloDelito("A", "#00FF00", "Robo Piraña de Motovehículos", True),
+    "ROBO PIRAÑA": SimboloDelito("A", "#0000FF", "Robo Piraña", True),
+    "ROBO ARREBATO": SimboloDelito("A", "#FFFF00", "Robo Arrebato", True),
+    "ROBO CLAVERO DE AUTOS": SimboloDelito("A", "#00FF00", "Robo Clavero de Autos", True),
+    "ROBO DE MOTOVEHICULOS": SimboloDelito("A", "#00FF00", "Robo de Motovehículos", True),
+    "ROBO DE AUTOMOTOR": SimboloDelito("A", "#808080", "Robo de Automotor", True),
+    "ROBO ESCRUCHE": SimboloDelito("#", "#FF0000", "Robo Escruche", True),
+    "ROBO BOQUETERO": SimboloDelito("#", "#00FF00", "Robo Boquetero", True),
+    "ROBO ROMPE VIDRIO": SimboloDelito("A", "#0000FF", "Robo Rompe Vidrio", True),
+    "ROBO OPORTUNISTA": SimboloDelito("A", "#000000", "Robo Oportunista", True),
     
     # ═══════════════════════════════════════════════════════════════════════
-    # HURTOS CONSUMADOS (círculos con relleno)
+    # TENTATIVAS DE ROBO (triángulos vacíos - letra a)
     # ═══════════════════════════════════════════════════════════════════════
     
-    "HURTO PUNGA": SimboloDelito("●", "#0000FF", "Hurto Punga", True),
-    "HURTO MECHERA": SimboloDelito("●", "#00FF00", "Hurto Mechera", True),
-    "HURTO OPORTUNISTA": SimboloDelito("●", "#FFFF00", "Hurto Oportunista", True),
-    "HURTO DE MOTOVEHICULO": SimboloDelito("●", "#FF0000", "Hurto de Motovehículo", True),
-    "HURTO DE AUTOMOTOR": SimboloDelito("●", "#808080", "Hurto de Automotor", True),
-    "HURTO INHIBIDOR DE ALARMAS": SimboloDelito("○", "#FFFFFF", "Hurto Inhibidor de Alarmas", False),
-    "HURTO ESCALAMIENTO": SimboloDelito("●", "#FFA500", "Hurto Escalamiento", True),
-    "HURTO VIUDA NEGRA": SimboloDelito("●", "#000000", "Hurto Viuda Negra", True),
+    "TENTATIVA DE ROBO AGRAVADO ASALTANTE": SimboloDelito("a", "#FF0000", "Tentativa de Robo Agravado Asaltante", False),
+    "TENTATIVA DE ROBO AGRAVADO ASALTANTE EN BANDA": SimboloDelito("a", "#FFFF00", "Tentativa de Robo Agravado Asaltante en Banda", False),
+    "TENTATIVA DE ROBO AGRAVADO DE MOTOVEHICULO": SimboloDelito("a", "#00FF00", "Tentativa de Robo Agravado de Motovehículo", False),
+    "TENTATIVA DE ROBO AGRAVADO PIRAÑA DE MOTOVEHICULO": SimboloDelito("a", "#FF0000", "Tentativa de Robo Agravado Piraña de Motovehículo", False),
+    "TENTATIVA DE ROBO AGRAVADO DE AUTOMOTOR": SimboloDelito("a", "#808080", "Tentativa de Robo Agravado de Automotor", False),
+    "TENTATIVA DE ROBO AGRAVADO ENTRADERA": SimboloDelito("a", "#00FF00", "Tentativa de Robo Agravado Entradera", False),
+    "TENTATIVA DE ROBO AGRAVADO ARIETE": SimboloDelito("a", "#0000FF", "Tentativa de Robo Agravado Ariete", False),
+    "TENTATIVA DE ROBO PIRAÑA DE MOTOVEHICULO": SimboloDelito("a", "#00FF00", "Tentativa de Robo Piraña de Motovehículo", False),
+    "TENTATIVA DE ROBO PIRAÑA": SimboloDelito("a", "#0000FF", "Tentativa de Robo Piraña", False),
+    "TENTATIVA DE ROBO ARREBATO": SimboloDelito("a", "#FFFF00", "Tentativa de Robo Arrebato", False),
+    "TENTATIVA DE ROBO CLAVERO DE AUTOS": SimboloDelito("a", "#00FF00", "Tentativa de Robo Clavero de Autos", False),
+    "TENTATIVA DE ROBO DE MOTOVEHICULOS": SimboloDelito("a", "#00FF00", "Tentativa de Robo de Motovehículos", False),
+    "TENTATIVA DE ROBO DE AUTOMOTOR": SimboloDelito("a", "#808080", "Tentativa de Robo de Automotor", False),
+    "TENTATIVA DE ROBO ESCRUCHE": SimboloDelito("=", "#FF0000", "Tentativa de Robo Escruche", False),
+    "TENTATIVA DE ROBO BOQUETERO": SimboloDelito("=", "#00FF00", "Tentativa de Robo Boquetero", False),
+    "TENTATIVA DE ROBO ROMPE VIDRIO": SimboloDelito("a", "#0000FF", "Tentativa de Robo Rompe Vidrio", False),
+    "TENTATIVA DE ROBO OPORTUNISTA": SimboloDelito("a", "#000000", "Tentativa de Robo Oportunista", False),
     
     # ═══════════════════════════════════════════════════════════════════════
-    # TENTATIVAS DE HURTO (círculos sin relleno)
+    # HURTOS CONSUMADOS (círculos con relleno - letra O)
     # ═══════════════════════════════════════════════════════════════════════
     
-    "TENTATIVA DE HURTO PUNGA": SimboloDelito("○", "#0000FF", "Tentativa de Hurto Punga", False),
-    "TENTATIVA DE HURTO MECHERA": SimboloDelito("○", "#00FF00", "Tentativa de Hurto Mechera", False),
-    "TENTATIVA DE HURTO OPORTUNISTA": SimboloDelito("○", "#FFFF00", "Tentativa de Hurto Oportunista", False),
-    "TENTATIVA DE HURTO DE MOTOVEHICULO": SimboloDelito("○", "#FF0000", "Tentativa de Hurto de Motovehículo", False),
-    "TENTATIVA DE HURTO DE AUTOMOTOR": SimboloDelito("○", "#808080", "Tentativa de Hurto de Automotor", False),
-    "TENTATIVA DE HURTO INHIBIDOR DE ALARMAS": SimboloDelito("○", "#FFFFFF", "Tentativa de Hurto Inhibidor de Alarmas", False),
-    "TENTATIVA DE HURTO ESCALAMIENTO": SimboloDelito("○", "#FFA500", "Tentativa de Hurto Escalamiento", False),
-    "TENTATIVA DE HURTO VIUDA NEGRA": SimboloDelito("○", "#000000", "Tentativa de Hurto Viuda Negra", False),
+    "HURTO PUNGA": SimboloDelito("O", "#0000FF", "Hurto Punga", True),
+    "HURTO MECHERA": SimboloDelito("O", "#00FF00", "Hurto Mechera", True),
+    "HURTO OPORTUNISTA": SimboloDelito("O", "#FFFF00", "Hurto Oportunista", True),
+    "HURTO DE MOTOVEHICULO": SimboloDelito("O", "#FF0000", "Hurto de Motovehículo", True),
+    "HURTO DE AUTOMOTOR": SimboloDelito("O", "#808080", "Hurto de Automotor", True),
+    "HURTO INHIBIDOR DE ALARMAS": SimboloDelito("o", "#808080", "Hurto Inhibidor de Alarmas", False),
+    "HURTO ESCALAMIENTO": SimboloDelito("O", "#FFA500", "Hurto Escalamiento", True),
+    "HURTO VIUDA NEGRA": SimboloDelito("O", "#000000", "Hurto Viuda Negra", True),
     
     # ═══════════════════════════════════════════════════════════════════════
-    # ESTAFAS (rombos)
+    # TENTATIVAS DE HURTO (círculos sin relleno - letra o)
     # ═══════════════════════════════════════════════════════════════════════
     
-    "ESTAFA CUENTO DEL TIO": SimboloDelito("◆", "#0000FF", "Estafa Cuento del Tío", True),
-    "TENTATIVA DE ESTAFA CUENTO DEL TIO": SimboloDelito("◇", "#0000FF", "Tentativa de Estafa Cuento del Tío", False),
+    "TENTATIVA DE HURTO PUNGA": SimboloDelito("o", "#0000FF", "Tentativa de Hurto Punga", False),
+    "TENTATIVA DE HURTO MECHERA": SimboloDelito("o", "#00FF00", "Tentativa de Hurto Mechera", False),
+    "TENTATIVA DE HURTO OPORTUNISTA": SimboloDelito("o", "#FFFF00", "Tentativa de Hurto Oportunista", False),
+    "TENTATIVA DE HURTO DE MOTOVEHICULO": SimboloDelito("o", "#FF0000", "Tentativa de Hurto de Motovehículo", False),
+    "TENTATIVA DE HURTO DE AUTOMOTOR": SimboloDelito("o", "#808080", "Tentativa de Hurto de Automotor", False),
+    "TENTATIVA DE HURTO INHIBIDOR DE ALARMAS": SimboloDelito("o", "#808080", "Tentativa de Hurto Inhibidor de Alarmas", False),
+    "TENTATIVA DE HURTO ESCALAMIENTO": SimboloDelito("o", "#FFA500", "Tentativa de Hurto Escalamiento", False),
+    "TENTATIVA DE HURTO VIUDA NEGRA": SimboloDelito("o", "#000000", "Tentativa de Hurto Viuda Negra", False),
+    
+    # ═══════════════════════════════════════════════════════════════════════
+    # ESTAFAS (rombos - letra D)
+    # ═══════════════════════════════════════════════════════════════════════
+    
+    "ESTAFA CUENTO DEL TIO": SimboloDelito("D", "#0000FF", "Estafa Cuento del Tío", True),
+    "TENTATIVA DE ESTAFA CUENTO DEL TIO": SimboloDelito("d", "#0000FF", "Tentativa de Estafa Cuento del Tío", False),
     
     # ═══════════════════════════════════════════════════════════════════════
     # INDICADORES ESPECIALES
     # ═══════════════════════════════════════════════════════════════════════
     
-    "ESCLARECIDO": SimboloDelito("◉", "#00FF00", "Hecho Esclarecido", True),
-    "COMISARIA": SimboloDelito("Ⓟ", "#0000FF", "Comisaría Jurisdiccional", True),
+    "ESCLARECIDO": SimboloDelito("o", "#00FF00", "Hecho Esclarecido", False),
+    "HECHOS ESCLARECIDO": SimboloDelito("o", "#00FF00", "Hechos Esclarecidos", False),
+    "HECHOS ESCLARECIDO SI": SimboloDelito("o", "#00FF00", "Hechos Esclarecidos SI", False),
+    "COMISARIA": SimboloDelito("P", "#0000FF", "Comisaría Jurisdiccional", True),
+    "COMISARIA JURISDICCIONAL": SimboloDelito("P", "#0000FF", "Comisaría Jurisdiccional", True),
+    "TRAILERS Y GARITAS": SimboloDelito("T", "#0000FF", "Trailers y Garitas", True),
+    
+    # ═══════════════════════════════════════════════════════════════════════
+    # ALIASES CON GUIONES BAJOS (para compatibilidad con delito_con_modalidad)
+    # ═══════════════════════════════════════════════════════════════════════
+    
+    # Robos con guiones bajos
+    "ROBO_AGRAVADO_ASALTANTE": SimboloDelito("A", "#FF0000", "Robo Agravado Asaltante", True),
+    "ROBO_AGRAVADO_ASALTANTE_EN_BANDA": SimboloDelito("A", "#FFFF00", "Robo Agravado Asaltante en Banda", True),
+    "ROBO_AGRAVADO_DE_MOTOVEHICULO": SimboloDelito("A", "#00FF00", "Robo Agravado de Motovehículo", True),
+    "ROBO_AGRAVADO_PIRAÑA_DE_MOTOVEHICULO": SimboloDelito("A", "#FF0000", "Robo Agravado Piraña de Motovehículo", True),
+    "ROBO_AGRAVADO_DE_AUTOMOTOR": SimboloDelito("A", "#808080", "Robo Agravado de Automotor", True),
+    "ROBO_AGRAVADO_ENTRADERA": SimboloDelito("A", "#00FF00", "Robo Agravado Entradera", True),
+    "ROBO_AGRAVADO_ARIETE": SimboloDelito("A", "#0000FF", "Robo Agravado Ariete", True),
+    "ROBO_PIRAÑA_DE_MOTOVEHICULOS": SimboloDelito("A", "#00FF00", "Robo Piraña de Motovehículos", True),
+    "ROBO_PIRAÑA": SimboloDelito("A", "#0000FF", "Robo Piraña", True),
+    "ROBO_ARREBATO": SimboloDelito("A", "#FFFF00", "Robo Arrebato", True),
+    "ROBO_CLAVERO_DE_AUTOS": SimboloDelito("A", "#00FF00", "Robo Clavero de Autos", True),
+    "ROBO_CLAVERO_AUTOS": SimboloDelito("A", "#00FF00", "Robo Clavero Autos", True),
+    "ROBO_DE_MOTOVEHICULOS": SimboloDelito("A", "#00FF00", "Robo de Motovehículos", True),
+    "ROBO_MOTOVEHICULO": SimboloDelito("A", "#00FF00", "Robo Motovehículo", True),
+    "ROBO_ROBO_MOTOVEHICULO": SimboloDelito("A", "#00FF00", "Robo Motovehículo", True),
+    "ROBO_DE_AUTOMOTOR": SimboloDelito("A", "#808080", "Robo de Automotor", True),
+    "ROBO_ESCRUCHE": SimboloDelito("#", "#FF0000", "Robo Escruche", True),
+    "ROBO_BOQUETERO": SimboloDelito("#", "#00FF00", "Robo Boquetero", True),
+    "ROBO_ROMPE_VIDRIO": SimboloDelito("A", "#0000FF", "Robo Rompe Vidrio", True),
+    "ROBO_OPORTUNISTA": SimboloDelito("A", "#000000", "Robo Oportunista", True),
+    
+    # Tentativas de robo con guiones bajos
+    "TENTATIVA_DE_ROBO_AGRAVADO_ASALTANTE": SimboloDelito("a", "#FF0000", "Tentativa de Robo Agravado Asaltante", False),
+    "TENTATIVA_DE_ROBO_ARREBATO": SimboloDelito("a", "#FFFF00", "Tentativa de Robo Arrebato", False),
+    "TENTATIVA_DE_ROBO_CLAVERO_DE_AUTOS": SimboloDelito("a", "#00FF00", "Tentativa de Robo Clavero de Autos", False),
+    "TENTATIVA_DE_ROBO_CLAVERO_AUTOS": SimboloDelito("a", "#00FF00", "Tentativa de Robo Clavero Autos", False),
+    "TENTATIVA_DE_ROBO_PIRAÑA": SimboloDelito("a", "#0000FF", "Tentativa de Robo Piraña", False),
+    "TENTATIVA_DE_ROBO_OPORTUNISTA": SimboloDelito("a", "#000000", "Tentativa de Robo Oportunista", False),
+    
+    # Hurtos con guiones bajos
+    "HURTO_PUNGA": SimboloDelito("O", "#0000FF", "Hurto Punga", True),
+    "HURTO_MECHERA": SimboloDelito("O", "#00FF00", "Hurto Mechera", True),
+    "HURTO_OPORTUNISTA": SimboloDelito("O", "#FFFF00", "Hurto Oportunista", True),
+    "HURTO_DE_MOTOVEHICULO": SimboloDelito("O", "#FF0000", "Hurto de Motovehículo", True),
+    "HURTO_MOTOVEHICULO": SimboloDelito("O", "#FF0000", "Hurto Motovehículo", True),
+    "HURTO_HURTO_MOTOVEHICULO": SimboloDelito("O", "#FF0000", "Hurto Motovehículo", True),
+    "HURTO_DE_AUTOMOTOR": SimboloDelito("O", "#808080", "Hurto de Automotor", True),
+    "HURTO_INHIBIDOR_DE_ALARMAS": SimboloDelito("o", "#808080", "Hurto Inhibidor de Alarmas", False),
+    "HURTO_ESCALAMIENTO": SimboloDelito("O", "#FFA500", "Hurto Escalamiento", True),
+    "HURTO_VIUDA_NEGRA": SimboloDelito("O", "#000000", "Hurto Viuda Negra", True),
+    
+    # Tentativas de hurto con guiones bajos
+    "TENTATIVA_DE_HURTO_PUNGA": SimboloDelito("o", "#0000FF", "Tentativa de Hurto Punga", False),
+    "TENTATIVA_DE_HURTO_MECHERA": SimboloDelito("o", "#00FF00", "Tentativa de Hurto Mechera", False),
+    "TENTATIVA_DE_HURTO_OPORTUNISTA": SimboloDelito("o", "#FFFF00", "Tentativa de Hurto Oportunista", False),
+    "TENTATIVA_DE_HURTO_MOTOVEHICULO": SimboloDelito("o", "#FF0000", "Tentativa de Hurto Motovehículo", False),
+    "TENTATIVA_DE_HURTO_ESCALAMIENTO": SimboloDelito("o", "#FFA500", "Tentativa de Hurto Escalamiento", False),
+    
+    # Estafas con guiones bajos
+    "ESTAFA_CUENTO_DEL_TIO": SimboloDelito("D", "#0000FF", "Estafa Cuento del Tío", True),
+    "TENTATIVA_DE_ESTAFA_CUENTO_DEL_TIO": SimboloDelito("d", "#0000FF", "Tentativa de Estafa Cuento del Tío", False),
 }
 
 

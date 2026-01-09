@@ -4,7 +4,7 @@ Widget selector de período.
 Permite seleccionar fechas de inicio y fin para el análisis.
 """
 from datetime import date, timedelta
-from typing import Optional, Tuple
+from typing import Optional, Tuple, TYPE_CHECKING
 
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
@@ -12,6 +12,9 @@ from PyQt6.QtWidgets import (
     QRadioButton, QButtonGroup, QFrame, QSpinBox
 )
 from PyQt6.QtCore import pyqtSignal, Qt, QDate
+
+if TYPE_CHECKING:
+    from .file_selector import FileSelector
 
 
 class PeriodSelector(QWidget):
@@ -28,7 +31,12 @@ class PeriodSelector(QWidget):
     
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
+        self._file_selector = None
         self._setup_ui()
+    
+    def set_file_selector(self, file_selector: 'FileSelector'):
+        """Establece referencia al selector de archivos para contar hechos."""
+        self._file_selector = file_selector
     
     def _setup_ui(self):
         """Configura la interfaz de usuario."""
@@ -81,8 +89,9 @@ class PeriodSelector(QWidget):
         self.date_start = QDateEdit()
         self.date_start.setCalendarPopup(True)
         self.date_start.setDisplayFormat("dd/MM/yyyy")
+        self.date_start.setMaximumDate(QDate.currentDate())  # Limitar a hoy
         self.date_start.setDate(QDate.currentDate().addDays(-30))
-        self.date_start.dateChanged.connect(self._on_date_changed)
+        self.date_start.dateChanged.connect(self._on_start_date_changed)
         dates_layout.addWidget(self.date_start, 0, 1)
         
         # Fecha fin
@@ -90,14 +99,20 @@ class PeriodSelector(QWidget):
         self.date_end = QDateEdit()
         self.date_end.setCalendarPopup(True)
         self.date_end.setDisplayFormat("dd/MM/yyyy")
+        self.date_end.setMaximumDate(QDate.currentDate())  # Limitar a hoy
         self.date_end.setDate(QDate.currentDate())
-        self.date_end.dateChanged.connect(self._on_date_changed)
+        self.date_end.dateChanged.connect(self._on_end_date_changed)
         dates_layout.addWidget(self.date_end, 0, 3)
         
         # Días totales
         self.label_days = QLabel("30 días")
         self.label_days.setStyleSheet("color: #00d4ff; font-weight: bold;")
         dates_layout.addWidget(self.label_days, 0, 4)
+        
+        # Conteo de hechos
+        self.label_count = QLabel("0 hechos")
+        self.label_count.setStyleSheet("color: #888888; font-weight: bold; min-width: 80px;")
+        dates_layout.addWidget(self.label_count, 0, 5)
         
         group_layout.addLayout(dates_layout)
         layout.addWidget(group)
@@ -121,9 +136,36 @@ class PeriodSelector(QWidget):
         
         self._on_date_changed()
     
+    def _on_start_date_changed(self):
+        """Maneja cambio en fecha de inicio con auto-corrección."""
+        start = self.date_start.date()
+        end = self.date_end.date()
+        
+        # Auto-corregir: si inicio > fin, ajustar fin = inicio
+        if start.daysTo(end) < 0:
+            self.date_end.blockSignals(True)
+            self.date_end.setDate(start)
+            self.date_end.blockSignals(False)
+        
+        self._on_date_changed()
+    
+    def _on_end_date_changed(self):
+        """Maneja cambio en fecha de fin con auto-corrección."""
+        start = self.date_start.date()
+        end = self.date_end.date()
+        
+        # Auto-corregir: si fin < inicio, ajustar inicio = fin
+        if start.daysTo(end) < 0:
+            self.date_start.blockSignals(True)
+            self.date_start.setDate(end)
+            self.date_start.blockSignals(False)
+        
+        self._on_date_changed()
+    
     def _on_date_changed(self):
         """Maneja cambios en las fechas."""
         self._update_days_label()
+        self._update_count_label()
         
         start = self.get_start_date()
         end = self.get_end_date()
@@ -146,6 +188,50 @@ class PeriodSelector(QWidget):
             self.label_days.setText(f"{days + 1} días")
             self.label_days.setStyleSheet("color: #00d4ff; font-weight: bold;")
     
+    def _update_count_label(self):
+        """Actualiza el conteo de hechos en el período."""
+        if not self._file_selector:
+            return
+        
+        count = self._count_hechos_in_period()
+        self.label_count.setText(f"{count} hechos")
+        
+        # Color según cantidad
+        if count == 0:
+            self.label_count.setStyleSheet("color: #ff3b3b; font-weight: bold; min-width: 80px;")
+        elif count < 5:
+            self.label_count.setStyleSheet("color: #ffaa00; font-weight: bold; min-width: 80px;")
+        else:
+            self.label_count.setStyleSheet("color: #00ff00; font-weight: bold; min-width: 80px;")
+    
+    def _count_hechos_in_period(self) -> int:
+        """Cuenta hechos en el período actual."""
+        if not self._file_selector:
+            return 0
+        
+        files = self._file_selector.get_files()
+        if not files.get('hechos'):
+            return 0
+        
+        try:
+            from ..core.data_processor import DataProcessor
+            from ..core.field_mapper import FieldMapper
+            
+            processor = DataProcessor(field_mapper=FieldMapper())
+            processor.load_hechos(files['hechos'])
+            
+            start = self.get_start_date()
+            end = self.get_end_date()
+            
+            hechos, _, _ = processor.filter_by_period(start, end)
+            return len(hechos)
+        except Exception:
+            return 0
+    
+    def update_counts(self):
+        """Actualiza el conteo de hechos (llamar cuando cambian archivos)."""
+        self._update_count_label()
+    
     def get_start_date(self) -> date:
         """Obtiene la fecha de inicio."""
         qdate = self.date_start.date()
@@ -160,12 +246,23 @@ class PeriodSelector(QWidget):
         """Obtiene el período completo."""
         return (self.get_start_date(), self.get_end_date())
     
-    def validate(self) -> bool:
-        """Valida que el período sea correcto."""
+    def validate(self) -> Tuple[bool, str]:
+        """
+        Valida que el período sea correcto.
+        
+        Returns:
+            Tupla (es_valido, mensaje_error)
+        """
         start = self.date_start.date()
         end = self.date_end.date()
         
-        return start.daysTo(end) >= 0
+        if start.daysTo(end) < 0:
+            return False, "La fecha de inicio es posterior a la fecha fin."
+        
+        if end > QDate.currentDate():
+            return False, "La fecha fin no puede ser futura."
+        
+        return True, ""
 
 
 class ComparativePeriodSelector(QWidget):
@@ -173,6 +270,7 @@ class ComparativePeriodSelector(QWidget):
     Widget para seleccionar períodos comparativos.
     
     Permite comparar hasta 4 períodos simultáneos.
+    Requiere mínimo 2 períodos para informes comparativos.
     """
     
     periods_changed = pyqtSignal(list)
@@ -180,7 +278,12 @@ class ComparativePeriodSelector(QWidget):
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
         self.period_widgets = []
+        self._file_selector = None
         self._setup_ui()
+    
+    def set_file_selector(self, file_selector: 'FileSelector'):
+        """Establece referencia al selector de archivos para contar hechos."""
+        self._file_selector = file_selector
     
     def _setup_ui(self):
         """Configura la interfaz de usuario."""
@@ -243,7 +346,7 @@ class ComparativePeriodSelector(QWidget):
         date_start = QDateEdit()
         date_start.setCalendarPopup(True)
         date_start.setDisplayFormat("dd/MM/yyyy")
-        date_start.dateChanged.connect(self._on_period_changed)
+        date_start.setMaximumDate(QDate.currentDate())  # Limitar a hoy
         row.addWidget(date_start)
         
         row.addWidget(QLabel("a"))
@@ -252,8 +355,13 @@ class ComparativePeriodSelector(QWidget):
         date_end = QDateEdit()
         date_end.setCalendarPopup(True)
         date_end.setDisplayFormat("dd/MM/yyyy")
-        date_end.dateChanged.connect(self._on_period_changed)
+        date_end.setMaximumDate(QDate.currentDate())  # Limitar a hoy
         row.addWidget(date_end)
+        
+        # Label de conteo de hechos
+        count_label = QLabel("0 hechos")
+        count_label.setStyleSheet("color: #888888; font-weight: bold; min-width: 80px;")
+        row.addWidget(count_label)
         
         # Botón eliminar (excepto los primeros 2)
         if len(self.period_widgets) >= 2:
@@ -269,17 +377,102 @@ class ComparativePeriodSelector(QWidget):
         offset = len(self.period_widgets) * 30
         end = QDate.currentDate().addDays(-offset)
         start = end.addDays(-30)
+        
+        # Asegurar que no exceda la fecha máxima
+        if end > QDate.currentDate():
+            end = QDate.currentDate()
+        if start > end:
+            start = end.addDays(-30)
+        
         date_start.setDate(start)
         date_end.setDate(end)
+        
+        # Conectar señales para auto-corrección
+        date_start.dateChanged.connect(lambda: self._on_start_changed(date_start, date_end, count_label))
+        date_end.dateChanged.connect(lambda: self._on_end_changed(date_start, date_end, count_label))
         
         # Guardar referencia
         self.period_widgets.append({
             'layout': row,
             'start': date_start,
-            'end': date_end
+            'end': date_end,
+            'count_label': count_label
         })
         
         self.periods_container.addLayout(row)
+    
+    def _on_start_changed(self, date_start: QDateEdit, date_end: QDateEdit, count_label: QLabel):
+        """Maneja cambio en fecha de inicio con auto-corrección."""
+        start = date_start.date()
+        end = date_end.date()
+        
+        # Auto-corregir: si inicio > fin, ajustar fin = inicio
+        if start.daysTo(end) < 0:
+            date_end.blockSignals(True)
+            date_end.setDate(start)
+            date_end.blockSignals(False)
+        
+        self._update_single_count(date_start, date_end, count_label)
+        self._on_period_changed()
+    
+    def _on_end_changed(self, date_start: QDateEdit, date_end: QDateEdit, count_label: QLabel):
+        """Maneja cambio en fecha de fin con auto-corrección."""
+        start = date_start.date()
+        end = date_end.date()
+        
+        # Auto-corregir: si fin < inicio, ajustar inicio = fin
+        if start.daysTo(end) < 0:
+            date_start.blockSignals(True)
+            date_start.setDate(end)
+            date_start.blockSignals(False)
+        
+        self._update_single_count(date_start, date_end, count_label)
+        self._on_period_changed()
+    
+    def _update_single_count(self, date_start: QDateEdit, date_end: QDateEdit, count_label: QLabel):
+        """Actualiza el conteo para un período específico."""
+        if not self._file_selector:
+            return
+        
+        count = self._count_hechos(date_start.date(), date_end.date())
+        count_label.setText(f"{count} hechos")
+        
+        # Color según cantidad
+        if count == 0:
+            count_label.setStyleSheet("color: #ff3b3b; font-weight: bold; min-width: 80px;")
+        elif count < 5:
+            count_label.setStyleSheet("color: #ffaa00; font-weight: bold; min-width: 80px;")
+        else:
+            count_label.setStyleSheet("color: #00ff00; font-weight: bold; min-width: 80px;")
+    
+    def _count_hechos(self, start_qdate: QDate, end_qdate: QDate) -> int:
+        """Cuenta hechos en un período."""
+        if not self._file_selector:
+            return 0
+        
+        files = self._file_selector.get_files()
+        if not files.get('hechos'):
+            return 0
+        
+        try:
+            from ..core.data_processor import DataProcessor
+            from ..core.field_mapper import FieldMapper
+            
+            processor = DataProcessor(field_mapper=FieldMapper())
+            processor.load_hechos(files['hechos'])
+            
+            start = date(start_qdate.year(), start_qdate.month(), start_qdate.day())
+            end = date(end_qdate.year(), end_qdate.month(), end_qdate.day())
+            
+            hechos, _, _ = processor.filter_by_period(start, end)
+            return len(hechos)
+        except Exception:
+            return 0
+    
+    def update_counts(self):
+        """Actualiza todos los conteos de hechos (llamar cuando cambian archivos)."""
+        for pw in self.period_widgets:
+            self._update_single_count(pw['start'], pw['end'], pw['count_label'])
     
     def _on_add_period(self):
         """Agrega un nuevo período."""
@@ -323,13 +516,25 @@ class ComparativePeriodSelector(QWidget):
         
         return periods
     
-    def validate(self) -> bool:
-        """Valida todos los períodos."""
-        for pw in self.period_widgets:
+    def validate(self) -> Tuple[bool, str]:
+        """
+        Valida todos los períodos.
+        
+        Returns:
+            Tupla (es_valido, mensaje_error)
+        """
+        # Verificar mínimo 2 períodos
+        if len(self.period_widgets) < 2:
+            return False, "Se requieren al menos 2 períodos para el informe comparativo."
+        
+        for i, pw in enumerate(self.period_widgets, 1):
             start = pw['start'].date()
             end = pw['end'].date()
             
             if start.daysTo(end) < 0:
-                return False
+                return False, f"Período {i}: La fecha de inicio es posterior a la fecha fin."
+            
+            if end > QDate.currentDate():
+                return False, f"Período {i}: La fecha fin no puede ser futura."
         
-        return True
+        return True, ""

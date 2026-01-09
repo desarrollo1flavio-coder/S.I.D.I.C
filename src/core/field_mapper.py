@@ -320,7 +320,7 @@ def normalizar_delito(delito: Optional[str]) -> str:
     import re
     delito_clean = re.sub(r'\s+', ' ', delito_clean)
     
-    # Reemplazar caracteres especiales comunes
+    # Reemplazar caracteres especiales comunes (mantener Ñ para coincidir con SIMBOLOS_DELITOS)
     delito_clean = delito_clean.replace('–', '-')  # En-dash to hyphen
     delito_clean = delito_clean.replace('—', '-')  # Em-dash to hyphen
     delito_clean = delito_clean.replace('Í', 'I')
@@ -328,7 +328,7 @@ def normalizar_delito(delito: Optional[str]) -> str:
     delito_clean = delito_clean.replace('Á', 'A')
     delito_clean = delito_clean.replace('É', 'E')
     delito_clean = delito_clean.replace('Ú', 'U')
-    delito_clean = delito_clean.replace('Ñ', 'N')  # Para búsquedas, mantener Ñ puede ser problema
+    # NO reemplazar Ñ para mantener consistencia con SIMBOLOS_DELITOS (ROBO PIRAÑA, etc.)
     
     # Cargar aliases
     aliases = _load_delito_aliases()
