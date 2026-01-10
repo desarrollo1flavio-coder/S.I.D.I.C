@@ -332,20 +332,13 @@ class MainWindow(QMainWindow):
         # ─────────────────────────────────────────────────────────────────
         self.tabs = QTabWidget()
         
-        # Tab: Reporte Simple
+        # Tab: Generar Informe (unifica Simple y Comparativo)
         tab_simple = self._create_simple_report_tab()
-        self.tabs.addTab(tab_simple, "📊 Reporte Simple")
-        
-        # Tab: Reporte Comparativo
-        tab_comparative = self._create_comparative_report_tab()
-        self.tabs.addTab(tab_comparative, "📈 Comparativo")
+        self.tabs.addTab(tab_simple, "📊 Generar Informe")
         
         # Tab: Vista Previa
         tab_preview = self._create_preview_tab()
         self.tabs.addTab(tab_preview, "👁️ Vista Previa")
-        
-        # Conectar cambio de tab para actualizar opciones
-        self.tabs.currentChanged.connect(self._on_tab_changed)
         
         main_layout.addWidget(self.tabs, 1)
         
@@ -486,7 +479,7 @@ class MainWindow(QMainWindow):
         self.file_selector = DropZoneSelector()
         content_layout.addWidget(self.file_selector)
         
-        # Selector de período
+        # Selector de período principal
         self.period_selector = PeriodSelector()
         self.period_selector.set_file_selector(self.file_selector)
         content_layout.addWidget(self.period_selector)
@@ -494,7 +487,88 @@ class MainWindow(QMainWindow):
         # Conectar señal de cambio de archivos para actualizar conteos
         self.file_selector.files_changed.connect(self._on_files_changed)
         
-        # Opciones de exportación
+        # ─────────────────────────────────────────────────────────────────
+        # TOGGLE PARA MODO COMPARATIVO
+        # ─────────────────────────────────────────────────────────────────
+        self.check_comparativo_mode = QCheckBox("📊 INCLUIR ANÁLISIS COMPARATIVO")
+        self.check_comparativo_mode.setStyleSheet("""
+            QCheckBox {
+                color: #00d4ff;
+                font-weight: bold;
+                font-size: 11pt;
+                padding: 12px 8px;
+                background-color: rgba(0, 212, 255, 0.1);
+                border: 1px solid #333344;
+                border-radius: 6px;
+            }
+            QCheckBox:hover {
+                background-color: rgba(0, 212, 255, 0.2);
+                border-color: #00d4ff;
+            }
+            QCheckBox::indicator {
+                width: 20px;
+                height: 20px;
+            }
+            QCheckBox::indicator:checked {
+                background-color: #00d4ff;
+                border: 2px solid #00d4ff;
+                border-radius: 4px;
+            }
+            QCheckBox::indicator:unchecked {
+                background-color: #1a1a2e;
+                border: 2px solid #333344;
+                border-radius: 4px;
+            }
+        """)
+        self.check_comparativo_mode.setToolTip(
+            "Active esta opción para comparar el período actual con períodos anteriores"
+        )
+        self.check_comparativo_mode.toggled.connect(self._toggle_comparative_section)
+        content_layout.addWidget(self.check_comparativo_mode)
+        
+        # ─────────────────────────────────────────────────────────────────
+        # SECCIÓN COLAPSABLE DE PERÍODOS COMPARATIVOS
+        # ─────────────────────────────────────────────────────────────────
+        self.comparative_container = QGroupBox("📊 PERÍODOS DE COMPARACIÓN")
+        self.comparative_container.setStyleSheet("""
+            QGroupBox {
+                border: 2px solid #00d4ff;
+                border-radius: 8px;
+                margin-top: 12px;
+                padding-top: 8px;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 12px;
+                padding: 0 8px;
+                color: #00d4ff;
+                font-weight: bold;
+            }
+        """)
+        self.comparative_container.setVisible(False)  # Inicialmente oculto
+        
+        comparative_layout = QVBoxLayout(self.comparative_container)
+        comparative_layout.setSpacing(12)
+        
+        # Información
+        info_label = QLabel(
+            "Configure los períodos anteriores para comparar con el período principal.\n"
+            "Se generarán cuadros comparativos mostrando variaciones porcentuales."
+        )
+        info_label.setStyleSheet("color: #888888; padding: 4px;")
+        info_label.setWordWrap(True)
+        comparative_layout.addWidget(info_label)
+        
+        # Selector de períodos comparativos
+        self.comparative_periods = ComparativePeriodSelector()
+        self.comparative_periods.set_file_selector(self.file_selector)
+        comparative_layout.addWidget(self.comparative_periods)
+        
+        content_layout.addWidget(self.comparative_container)
+        
+        # ─────────────────────────────────────────────────────────────────
+        # OPCIONES DE EXPORTACIÓN
+        # ─────────────────────────────────────────────────────────────────
         options_group = QGroupBox("⚙️ OPCIONES DE EXPORTACIÓN")
         options_layout = QVBoxLayout(options_group)
         options_layout.setSpacing(12)
@@ -533,10 +607,11 @@ class MainWindow(QMainWindow):
         self.check_matrices.setChecked(True)
         checks_layout.addWidget(self.check_matrices)
         
+        # Checkbox de comparativos (solo visible cuando modo comparativo activo)
         self.check_comparativos = QCheckBox("Cuadros comparativos")
         self.check_comparativos.setChecked(True)
-        self.check_comparativos.setEnabled(False)  # Deshabilitado hasta que haya múltiples períodos
-        self.check_comparativos.setToolTip("Disponible solo en reportes comparativos con múltiples períodos")
+        self.check_comparativos.setVisible(False)  # Oculto hasta activar modo comparativo
+        self.check_comparativos.setToolTip("Incluir cuadros comparativos entre períodos")
         checks_layout.addWidget(self.check_comparativos)
         
         checks_layout.addStretch()
@@ -549,6 +624,17 @@ class MainWindow(QMainWindow):
         layout.addWidget(scroll)
         
         return tab
+    
+    def _toggle_comparative_section(self, checked: bool):
+        """Muestra/oculta la sección de períodos comparativos."""
+        self.comparative_container.setVisible(checked)
+        self.check_comparativos.setVisible(checked)
+        
+        if checked:
+            self.check_comparativos.setChecked(True)
+            self.check_comparativos.setEnabled(True)
+        else:
+            self.check_comparativos.setChecked(False)
     
     def _create_comparative_report_tab(self) -> QWidget:
         """Crea el tab de reporte comparativo."""
@@ -763,7 +849,7 @@ class MainWindow(QMainWindow):
         if not self.file_selector.validate():
             return
         
-        self.tabs.setCurrentIndex(2)  # Tab de vista previa
+        self.tabs.setCurrentIndex(1)  # Tab de vista previa
         self.status_label.setText("Vista previa generada")
     
     def _on_generate(self):
@@ -793,27 +879,37 @@ class MainWindow(QMainWindow):
         if has_files and not self.file_selector.validate():
             return
         
-        # Validar período según el tab activo
-        if self.tabs.currentIndex() == 0:  # Reporte simple
-            is_valid, error_msg = self.period_selector.validate()
-            if not is_valid:
-                QMessageBox.warning(
-                    self, 
-                    "Error de Validación", 
-                    f"El período seleccionado no es válido.\n\n{error_msg}"
-                )
-                return
-            periods = [self.period_selector.get_period()]
-        else:  # Reporte comparativo
+        # Validar período principal siempre
+        is_valid, error_msg = self.period_selector.validate()
+        if not is_valid:
+            QMessageBox.warning(
+                self, 
+                "Error de Validación", 
+                f"El período seleccionado no es válido.\n\n{error_msg}"
+            )
+            return
+        
+        # Determinar si es modo comparativo basado en checkbox
+        is_comparative = self.check_comparativo_mode.isChecked()
+        
+        if is_comparative:
+            # Validar períodos comparativos adicionales
             is_valid, error_msg = self.comparative_periods.validate()
             if not is_valid:
                 QMessageBox.warning(
                     self, 
                     "Error de Validación", 
-                    f"Los períodos seleccionados no son válidos.\n\n{error_msg}"
+                    f"Los períodos de comparación no son válidos.\n\n{error_msg}"
                 )
                 return
-            periods = self.comparative_periods.get_periods()
+            
+            # Período principal + períodos de comparación
+            main_period = self.period_selector.get_period()
+            comparison_periods = self.comparative_periods.get_periods()
+            periods = [main_period] + comparison_periods
+        else:
+            # Solo período simple
+            periods = [self.period_selector.get_period()]
         
         # Seleccionar archivo de salida
         format_idx = self.combo_format.currentIndex()
@@ -937,41 +1033,7 @@ class MainWindow(QMainWindow):
         self.period_selector.update_counts()
         self.comparative_periods.update_counts()
     
-    def _on_periods_changed(self, periods: list):
-        """
-        Actualiza el estado del checkbox de comparativos según los períodos.
-        
-        Args:
-            periods: Lista de tuplas (fecha_inicio, fecha_fin)
-        """
-        has_multiple = len(periods) > 1
-        self.check_comparativos.setEnabled(has_multiple)
-        
-        if has_multiple:
-            self.check_comparativos.setToolTip("Incluir cuadros comparativos entre períodos")
-        else:
-            self.check_comparativos.setChecked(False)
-            self.check_comparativos.setToolTip("Disponible solo en reportes comparativos con múltiples períodos")
-    
-    def _on_tab_changed(self, index: int):
-        """
-        Actualiza el estado del checkbox de comparativos según el tab activo.
-        
-        Args:
-            index: Índice del tab activo (0=simple, 1=comparativo)
-        """
-        if index == 0:  # Tab de reporte simple
-            self.check_comparativos.setEnabled(False)
-            self.check_comparativos.setChecked(False)
-            self.check_comparativos.setToolTip("Disponible solo en reportes comparativos")
-        else:  # Tab de reporte comparativo
-            # Verificar si hay múltiples períodos
-            periods = self.comparative_periods.get_periods()
-            has_multiple = len(periods) > 1
-            self.check_comparativos.setEnabled(has_multiple)
-            if has_multiple:
-                self.check_comparativos.setChecked(True)
-                self.check_comparativos.setToolTip("Incluir cuadros comparativos entre períodos")
+
 
 
 def run_app():

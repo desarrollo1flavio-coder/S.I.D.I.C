@@ -291,41 +291,25 @@ class ComparativePeriodSelector(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(12)
         
-        # Grupo principal
-        group = QGroupBox("📊 PERÍODOS COMPARATIVOS")
-        group_layout = QVBoxLayout(group)
-        group_layout.setSpacing(12)
-        
-        # Información
-        info = QLabel(
-            "Configure hasta 4 períodos para comparar.\n"
-            "El primer período será el actual y los siguientes los anteriores."
-        )
-        info.setStyleSheet("color: #888888;")
-        group_layout.addWidget(info)
-        
-        # Contenedor de períodos
+        # Contenedor de períodos (sin grupo externo ya que está dentro de otro GroupBox)
         self.periods_container = QVBoxLayout()
         self.periods_container.setSpacing(8)
-        group_layout.addLayout(self.periods_container)
+        layout.addLayout(self.periods_container)
         
-        # Agregar 2 períodos por defecto
-        self._add_period_row("Período Actual")
+        # Agregar 1 período de comparación por defecto
         self._add_period_row("Período Anterior")
         
         # Botones
         btn_layout = QHBoxLayout()
         btn_layout.setSpacing(8)
         
-        btn_add = QPushButton("➕ Agregar Período")
+        btn_add = QPushButton("➕ Agregar otro período")
         btn_add.setProperty("class", "secondary")
         btn_add.clicked.connect(self._on_add_period)
         btn_layout.addWidget(btn_add)
         
         btn_layout.addStretch()
-        group_layout.addLayout(btn_layout)
-        
-        layout.addWidget(group)
+        layout.addLayout(btn_layout)
     
     def _add_period_row(self, label: str = None):
         """Agrega una fila de período."""
@@ -363,8 +347,8 @@ class ComparativePeriodSelector(QWidget):
         count_label.setStyleSheet("color: #888888; font-weight: bold; min-width: 80px;")
         row.addWidget(count_label)
         
-        # Botón eliminar (excepto los primeros 2)
-        if len(self.period_widgets) >= 2:
+        # Botón eliminar (excepto el primer período, que es requerido)
+        if len(self.period_widgets) >= 1:
             btn_remove = QPushButton("✕")
             btn_remove.setMaximumWidth(30)
             btn_remove.setProperty("class", "danger")
@@ -523,9 +507,9 @@ class ComparativePeriodSelector(QWidget):
         Returns:
             Tupla (es_valido, mensaje_error)
         """
-        # Verificar mínimo 2 períodos
-        if len(self.period_widgets) < 2:
-            return False, "Se requieren al menos 2 períodos para el informe comparativo."
+        # Verificar mínimo 1 período de comparación
+        if len(self.period_widgets) < 1:
+            return False, "Se requiere al menos 1 período de comparación."
         
         for i, pw in enumerate(self.period_widgets, 1):
             start = pw['start'].date()
