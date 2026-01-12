@@ -990,6 +990,91 @@ class TableGenerator:
             print(f"Error generando tabla comparativa general: {e}")
             return pd.DataFrame()
     
+    def generar_tabla_comparativa_detallada(self) -> pd.DataFrame:
+        """
+        Genera cuadro comparativo DETALLADO entre períodos con todos los delitos.
+        Similar al formato visual con colores azul/rojo según tendencia.
+        
+        Incluye:
+        - Cada tipo de delito con sus cantidades por período
+        - Diferencia en cantidades (con flecha ▲▼→)
+        - Diferencia porcentual
+        - Fila de SUMA TOTAL
+        - Columna de color para aplicar estilos
+        """
+        if not self.report.es_comparativo:
+            return pd.DataFrame()
+        
+        p1 = self.report.periodo_principal
+        p2 = self.report.periodo_comparacion
+        
+        if not p1 or not p2:
+            return pd.DataFrame()
+        
+        try:
+            comparator = PeriodComparator(p1, p2)
+            comparaciones = comparator.comparar_delitos()
+            
+            if not comparaciones:
+                return pd.DataFrame()
+            
+            data = []
+            total_p1 = 0
+            total_p2 = 0
+            
+            for comp in comparaciones:
+                total_p1 += comp.valor_periodo_a
+                total_p2 += comp.valor_periodo_b
+                
+                # Determinar color de fila según tendencia
+                # Azul = bajó (bueno), Rojo = subió (malo)
+                if comp.diferencia > 0:
+                    color_row = '#FF0000'  # Rojo - subió (malo)
+                elif comp.diferencia < 0:
+                    color_row = '#0000FF'  # Azul - bajó (bueno)
+                else:
+                    color_row = '#FFFFFF'  # Blanco - igual
+                
+                data.append({
+                    'DELITO': comp.categoria.replace('_', ' '),
+                    p1.rango_fechas: comp.valor_periodo_a,
+                    p2.rango_fechas: comp.valor_periodo_b,
+                    'DIFERENCIA EN CANTIDADES RESPECTO AL PERIODO ANTERIOR': f"{comp.tendencia_icono} {comp.diferencia:+d}" if comp.diferencia != 0 else f"→ {comp.diferencia}",
+                    'DIFERENCIA PORCENTUAL RESPECTO AL PERIODO ANTERIOR': comp.porcentaje_formateado,
+                    'color_fila': color_row,
+                    'tendencia': comp.tendencia.value
+                })
+            
+            # Fila de SUMA TOTAL
+            diff_total = total_p2 - total_p1
+            pct_total = ((total_p2 - total_p1) / total_p1 * 100) if total_p1 > 0 else 0
+            
+            if diff_total > 0:
+                icono_total = "▼"  # En contexto de delitos, subir es malo
+                color_total = '#FF0000'
+            elif diff_total < 0:
+                icono_total = "▼"
+                color_total = '#0000FF'
+            else:
+                icono_total = "→"
+                color_total = '#808080'
+            
+            data.append({
+                'DELITO': 'SUMA TOTAL ------>',
+                p1.rango_fechas: total_p1,
+                p2.rango_fechas: total_p2,
+                'DIFERENCIA EN CANTIDADES RESPECTO AL PERIODO ANTERIOR': f"{icono_total} {diff_total:+.2f}" if diff_total != 0 else f"→ 0",
+                'DIFERENCIA PORCENTUAL RESPECTO AL PERIODO ANTERIOR': f"{pct_total:+.2f}%",
+                'color_fila': '#FFFF00',  # Amarillo para total
+                'tendencia': 'total'
+            })
+            
+            return pd.DataFrame(data)
+        
+        except Exception as e:
+            print(f"Error generando tabla comparativa detallada: {e}")
+            return pd.DataFrame()
+    
     # ═══════════════════════════════════════════════════════════════════════
     # GENERAR TODAS LAS TABLAS
     # ═══════════════════════════════════════════════════════════════════════
@@ -1128,5 +1213,12 @@ class TableGenerator:
             except Exception as e:
                 print(f"Error generando comparativa_general: {e}")
                 tablas['comparativa_general'] = pd.DataFrame()
+            
+            # Tabla comparativa detallada (con colores por tendencia)
+            try:
+                tablas['comparativa_detallada'] = self.generar_tabla_comparativa_detallada()
+            except Exception as e:
+                print(f"Error generando comparativa_detallada: {e}")
+                tablas['comparativa_detallada'] = pd.DataFrame()
         
         return tablas

@@ -640,6 +640,10 @@ class ChartGenerator:
             ('delito_franja', self.grafico_delito_franja),
         ]
         
+        # Agregar gráfico comparativo de delitos para el cuadro comparativo mejorado
+        if self.report.es_comparativo:
+            charts.append(('comparativa_delitos', self.grafico_comparativo_delitos))
+        
         for nombre, func in charts:
             try:
                 fig = func()

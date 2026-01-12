@@ -267,6 +267,115 @@ class WordExporter:
         # Espacio después
         self.document.add_paragraph()
     
+    def _add_comparative_table_enhanced(
+        self,
+        df: pd.DataFrame,
+        title: str = "CUADRO COMPARATIVO ENTRE PERÍODOS",
+        chart_bytes: Optional[bytes] = None
+    ):
+        """
+        Agrega tabla comparativa con colores según tendencia.
+        
+        Aplica colores:
+        - Azul: Cuando el delito bajó (bueno)
+        - Rojo: Cuando el delito subió (malo)
+        - Amarillo: Fila de suma total
+        
+        Args:
+            df: DataFrame con columnas de datos y 'color_fila' para estilos.
+            title: Título de la sección.
+            chart_bytes: Gráfico comparativo en bytes PNG.
+        """
+        if df.empty:
+            return
+        
+        self._add_heading(title, level=2)
+        
+        # Columnas a mostrar (sin 'color_fila' y 'tendencia')
+        display_cols = [col for col in df.columns if col not in ['color_fila', 'tendencia']]
+        
+        # Crear tabla
+        n_rows = len(df) + 1  # +1 para encabezados
+        n_cols = len(display_cols)
+        
+        table = self.document.add_table(rows=n_rows, cols=n_cols)
+        table.style = 'Table Grid'
+        table.alignment = WD_TABLE_ALIGNMENT.CENTER
+        
+        # Encabezados (fondo rojo, texto blanco)
+        header_row = table.rows[0]
+        for col_idx, col_name in enumerate(display_cols):
+            cell = header_row.cells[col_idx]
+            cell.text = str(col_name)
+            self._set_cell_shading(cell, 'FF0000')
+            for paragraph in cell.paragraphs:
+                paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                for run in paragraph.runs:
+                    run.bold = True
+                    run.font.color.rgb = RGBColor(255, 255, 255)
+                    run.font.size = Pt(9)
+        
+        # Datos con colores según tendencia
+        for row_idx, (_, row) in enumerate(df.iterrows()):
+            table_row = table.rows[row_idx + 1]
+            
+            # Obtener color de la fila
+            color_fila = row.get('color_fila', '#FFFFFF') if 'color_fila' in row.index else '#FFFFFF'
+            tendencia = row.get('tendencia', '') if 'tendencia' in row.index else ''
+            
+            # Convertir color hex (sin #)
+            excel_color = color_fila.replace('#', '') if color_fila else 'FFFFFF'
+            
+            # Determinar si es fila de total
+            is_total = tendencia == 'total' or 'TOTAL' in str(row.iloc[0]).upper()
+            
+            for col_idx, col_name in enumerate(display_cols):
+                cell = table_row.cells[col_idx]
+                value = row[col_name]
+                cell.text = str(value) if value is not None else ""
+                
+                # Aplicar colores según tipo de fila
+                if is_total:
+                    # Fila total: fondo amarillo
+                    self._set_cell_shading(cell, 'FFFF00')
+                    for paragraph in cell.paragraphs:
+                        for run in paragraph.runs:
+                            run.bold = True
+                            run.font.size = Pt(10)
+                elif excel_color == 'FF0000':
+                    # Rojo: delito subió (malo)
+                    self._set_cell_shading(cell, 'FF0000')
+                    for paragraph in cell.paragraphs:
+                        for run in paragraph.runs:
+                            run.font.color.rgb = RGBColor(255, 255, 255)
+                            run.font.size = Pt(9)
+                elif excel_color == '0000FF':
+                    # Azul: delito bajó (bueno)
+                    self._set_cell_shading(cell, '0000FF')
+                    for paragraph in cell.paragraphs:
+                        for run in paragraph.runs:
+                            run.font.color.rgb = RGBColor(255, 255, 255)
+                            run.font.size = Pt(9)
+                else:
+                    # Sin cambio o normal
+                    self._set_cell_shading(cell, 'FFFFFF')
+                    for paragraph in cell.paragraphs:
+                        for run in paragraph.runs:
+                            run.font.size = Pt(9)
+                
+                # Centrar valores numéricos
+                for paragraph in cell.paragraphs:
+                    if col_idx > 0:
+                        paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                    paragraph.paragraph_format.space_after = Pt(0)
+        
+        # Espacio después de la tabla
+        self.document.add_paragraph()
+        
+        # Agregar gráfico comparativo
+        if chart_bytes:
+            self._add_image(chart_bytes)
+    
     # ═══════════════════════════════════════════════════════════════════════
     # SECCIONES DEL DOCUMENTO
     # ═══════════════════════════════════════════════════════════════════════
@@ -443,9 +552,17 @@ class WordExporter:
             if 'aprehendidos_clasificacion' in tables:
                 self._add_table(tables['aprehendidos_clasificacion'], "CLASIFICACIÓN DE APREHENDIDOS")
             
-            # Comparativa
-            if incluir_comparativos and 'comparativa_general' in tables and not tables['comparativa_general'].empty:
-                self._add_table(tables['comparativa_general'], "CUADRO COMPARATIVO ENTRE PERÍODOS")
+            # Comparativa - usar versión mejorada si hay datos detallados
+            if incluir_comparativos:
+                if 'comparativa_detallada' in tables and not tables['comparativa_detallada'].empty:
+                    # Usar el nuevo método con colores y gráfico
+                    self._add_comparative_table_enhanced(
+                        tables['comparativa_detallada'],
+                        "CUADRO COMPARATIVO ENTRE PERÍODOS",
+                        charts.get('comparativa_delitos') if incluir_graficos else None
+                    )
+                elif 'comparativa_general' in tables and not tables['comparativa_general'].empty:
+                    self._add_table(tables['comparativa_general'], "CUADRO COMPARATIVO ENTRE PERÍODOS")
             
             # Guardar
             Path(output_path).parent.mkdir(parents=True, exist_ok=True)

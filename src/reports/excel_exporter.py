@@ -381,6 +381,125 @@ class ExcelExporter:
         ws.column_dimensions['D'].width = 12  # Cantidad
     
     # ═══════════════════════════════════════════════════════════════════════
+    # CUADRO COMPARATIVO MEJORADO
+    # ═══════════════════════════════════════════════════════════════════════
+    
+    def _create_comparative_sheet_enhanced(
+        self,
+        df: pd.DataFrame,
+        chart_bytes: Optional[bytes] = None
+    ):
+        """
+        Crea hoja de cuadro comparativo con formato visual mejorado.
+        
+        Aplica colores según tendencia:
+        - Azul: Cuando el delito bajó (bueno)
+        - Rojo: Cuando el delito subió (malo)
+        - Amarillo: Fila de suma total
+        
+        Args:
+            df: DataFrame con columnas de datos y 'color_fila' para estilos.
+            chart_bytes: Gráfico comparativo en bytes PNG.
+        """
+        ws = self.workbook.create_sheet(title="Comparativa")
+        
+        if df.empty:
+            return
+        
+        # Título
+        self._add_title(ws, "CUADRO COMPARATIVO ENTRE PERÍODOS", 1, 1, 5)
+        
+        # Obtener columnas visibles (sin 'color_fila' y 'tendencia')
+        display_cols = [col for col in df.columns if col not in ['color_fila', 'tendencia']]
+        n_cols = len(display_cols)
+        
+        # Escribir encabezados (fila 3)
+        current_row = 3
+        for col_idx, col_name in enumerate(display_cols, start=1):
+            cell = ws.cell(row=current_row, column=col_idx, value=col_name)
+            cell.font = Font(bold=True, color='FFFFFF', size=10)
+            cell.fill = PatternFill(start_color='FF0000', end_color='FF0000', fill_type='solid')
+            cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+            cell.border = Border(
+                left=Side(style='thin'),
+                right=Side(style='thin'),
+                top=Side(style='thin'),
+                bottom=Side(style='thin')
+            )
+        
+        # Ajustar altura de fila de encabezado
+        ws.row_dimensions[current_row].height = 40
+        current_row += 1
+        
+        # Escribir datos con colores según tendencia
+        for _, row in df.iterrows():
+            color_fila = row.get('color_fila', '#FFFFFF') if 'color_fila' in row.index else '#FFFFFF'
+            tendencia = row.get('tendencia', '') if 'tendencia' in row.index else ''
+            
+            # Convertir color hex a formato Excel (sin #)
+            excel_color = color_fila.replace('#', '') if color_fila else 'FFFFFF'
+            
+            # Determinar si es fila de total
+            is_total = tendencia == 'total' or 'TOTAL' in str(row.iloc[0]).upper()
+            
+            for col_idx, col_name in enumerate(display_cols, start=1):
+                value = row[col_name]
+                cell = ws.cell(row=current_row, column=col_idx, value=value)
+                
+                # Estilo de borde común
+                cell.border = Border(
+                    left=Side(style='thin'),
+                    right=Side(style='thin'),
+                    top=Side(style='thin'),
+                    bottom=Side(style='thin')
+                )
+                
+                # Alineación
+                cell.alignment = Alignment(
+                    horizontal='center' if col_idx > 1 else 'left',
+                    vertical='center'
+                )
+                
+                # Aplicar colores según tipo de fila
+                if is_total:
+                    # Fila total: fondo amarillo, texto negro bold
+                    cell.fill = PatternFill(start_color='FFFF00', end_color='FFFF00', fill_type='solid')
+                    cell.font = Font(bold=True, color='000000', size=11)
+                elif excel_color == 'FF0000':
+                    # Rojo: delito subió (malo)
+                    cell.fill = PatternFill(start_color='FF0000', end_color='FF0000', fill_type='solid')
+                    cell.font = Font(color='FFFFFF', size=10)
+                elif excel_color == '0000FF':
+                    # Azul: delito bajó (bueno)
+                    cell.fill = PatternFill(start_color='0000FF', end_color='0000FF', fill_type='solid')
+                    cell.font = Font(color='FFFFFF', size=10)
+                else:
+                    # Sin cambio o normal
+                    cell.fill = PatternFill(start_color='FFFFFF', end_color='FFFFFF', fill_type='solid')
+                    cell.font = Font(color='000000', size=10)
+            
+            current_row += 1
+        
+        # Ajustar ancho de columnas
+        from openpyxl.utils import get_column_letter
+        column_widths = {
+            1: 40,   # DELITO
+            2: 18,   # Período 1
+            3: 18,   # Período 2
+            4: 35,   # Diferencia en cantidades
+            5: 35,   # Diferencia porcentual
+        }
+        for col_idx, width in column_widths.items():
+            if col_idx <= n_cols:
+                col_letter = get_column_letter(col_idx)
+                ws.column_dimensions[col_letter].width = width
+        
+        # Insertar gráfico comparativo debajo de la tabla
+        if chart_bytes:
+            chart_row = current_row + 2
+            self._insert_image(ws, chart_bytes, f'A{chart_row}')
+    
+    # ═══════════════════════════════════════════════════════════════════════
     # EXPORTACIÓN PRINCIPAL
     # ═══════════════════════════════════════════════════════════════════════
     
@@ -529,13 +648,20 @@ class ExcelExporter:
                     tables['esclarecimiento']
                 )
             
-            # Comparativa general
-            if incluir_comparativos and 'comparativa_general' in tables:
-                self._create_table_sheet(
-                    "Comparativa",
-                    "CUADRO COMPARATIVO ENTRE PERÍODOS",
-                    tables['comparativa_general']
-                )
+            # Comparativa general - usar versión mejorada si hay datos detallados
+            if incluir_comparativos:
+                if 'comparativa_detallada' in tables and not tables['comparativa_detallada'].empty:
+                    # Usar el nuevo método con colores y gráfico
+                    self._create_comparative_sheet_enhanced(
+                        tables['comparativa_detallada'],
+                        charts.get('comparativa_delitos') if incluir_graficos else None
+                    )
+                elif 'comparativa_general' in tables:
+                    self._create_table_sheet(
+                        "Comparativa",
+                        "CUADRO COMPARATIVO ENTRE PERÍODOS",
+                        tables['comparativa_general']
+                    )
             
             # Guardar
             Path(output_path).parent.mkdir(parents=True, exist_ok=True)
