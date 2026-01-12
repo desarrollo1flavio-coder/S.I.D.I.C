@@ -266,11 +266,19 @@ class TableGenerator:
         
         conteo = self.periodo.conteo_por_delito()
         
-        return self._conteo_a_dataframe(
+        df = self._conteo_a_dataframe(
             conteo,
             'DELITOS CON MODALIDADES',
             self.periodo.rango_fechas
         )
+        
+        # Filtrar valores 0 si no es comparativo
+        if not self.report.es_comparativo and not df.empty:
+            col_valor = self.periodo.rango_fechas
+            if col_valor in df.columns:
+                df = df[df[col_valor] > 0]
+        
+        return df
     
     def generar_tabla_delitos_comparativa(self) -> pd.DataFrame:
         """
@@ -298,13 +306,7 @@ class TableGenerator:
                 data.append({
                     'DELITOS CON MODALIDADES': comp.categoria.replace('_', ' '),
                     p1.rango_fechas: comp.valor_periodo_a,
-                    '%': self._format_porcentaje(
-                        self._calcular_porcentaje(comp.valor_periodo_a, total_p1)
-                    ),
                     p2.rango_fechas: comp.valor_periodo_b,
-                    '% ': self._format_porcentaje(
-                        self._calcular_porcentaje(comp.valor_periodo_b, total_p2)
-                    ),
                     'Variación': comp.porcentaje_formateado if hasattr(comp, 'porcentaje_formateado') else 'N/A',
                     'Tendencia': comp.tendencia_icono if hasattr(comp, 'tendencia_icono') else ''
                 })
@@ -315,9 +317,7 @@ class TableGenerator:
                 data.append({
                     'DELITOS CON MODALIDADES': 'TOTAL DE HECHOS',
                     p1.rango_fechas: total_p1,
-                    '%': '100,00%',
                     p2.rango_fechas: total_p2,
-                    '% ': '100,00%',
                     'Variación': total_comp.porcentaje_formateado if hasattr(total_comp, 'porcentaje_formateado') else 'N/A',
                     'Tendencia': total_comp.tendencia_icono if hasattr(total_comp, 'tendencia_icono') else ''
                 })
@@ -342,11 +342,19 @@ class TableGenerator:
         conteo = self.periodo.conteo_por_dia_semana()
         
         # Ordenar por cantidad, no por día
-        return self._conteo_a_dataframe(
+        df = self._conteo_a_dataframe(
             conteo,
             'DÍAS DE LA SEMANA EN QUE OCURRIERON LOS HECHOS',
             self.periodo.rango_fechas
         )
+        
+        # Filtrar valores 0 si no es comparativo
+        if not self.report.es_comparativo and not df.empty:
+            col_valor = self.periodo.rango_fechas
+            if col_valor in df.columns:
+                df = df[df[col_valor] > 0]
+        
+        return df
     
     def generar_tabla_dias_semana_comparativa(self) -> pd.DataFrame:
         """
@@ -405,11 +413,19 @@ class TableGenerator:
         
         conteo = self.periodo.conteo_por_franja_horaria()
         
-        return self._conteo_a_dataframe(
+        df = self._conteo_a_dataframe(
             conteo,
             'FRANJA HORARIA EN QUE OCURRIERON LOS HECHOS',
             self.periodo.rango_fechas
         )
+        
+        # Filtrar valores 0 si no es comparativo
+        if not self.report.es_comparativo and not df.empty:
+            col_valor = self.periodo.rango_fechas
+            if col_valor in df.columns:
+                df = df[df[col_valor] > 0]
+        
+        return df
     
     def generar_tabla_franja_horaria_comparativa(self) -> pd.DataFrame:
         """
@@ -468,11 +484,19 @@ class TableGenerator:
         
         conteo = self.periodo.conteo_por_movilidad()
         
-        return self._conteo_a_dataframe(
+        df = self._conteo_a_dataframe(
             conteo,
             'MEDIOS DE MOVILIDAD UTILIZADOS',
             self.periodo.rango_fechas
         )
+        
+        # Filtrar valores 0 si no es comparativo
+        if not self.report.es_comparativo and not df.empty:
+            col_valor = self.periodo.rango_fechas
+            if col_valor in df.columns:
+                df = df[df[col_valor] > 0]
+        
+        return df
     
     def generar_tabla_movilidad_comparativa(self) -> pd.DataFrame:
         """
@@ -538,11 +562,19 @@ class TableGenerator:
                 'Porcentaje': ['0,00%']
             })
         
-        return self._conteo_a_dataframe(
+        df = self._conteo_a_dataframe(
             conteo,
             'MEDIOS O ARMAS UTILIZADAS EN ROBOS AGRAVADOS',
             self.periodo.rango_fechas
         )
+        
+        # Filtrar valores 0 si no es comparativo
+        if not self.report.es_comparativo and not df.empty:
+            col_valor = self.periodo.rango_fechas
+            if col_valor in df.columns:
+                df = df[df[col_valor] > 0]
+        
+        return df
     
     def generar_tabla_armas_comparativa(self) -> pd.DataFrame:
         """
@@ -604,11 +636,19 @@ class TableGenerator:
         
         conteo = self.periodo.conteo_por_ambito()
         
-        return self._conteo_a_dataframe(
+        df = self._conteo_a_dataframe(
             conteo,
             'AMBITO DE OCURRENCIA DELICTUAL',
             self.periodo.rango_fechas
         )
+        
+        # Filtrar valores 0 si no es comparativo
+        if not self.report.es_comparativo and not df.empty:
+            col_valor = self.periodo.rango_fechas
+            if col_valor in df.columns:
+                df = df[df[col_valor] > 0]
+        
+        return df
     
     def generar_tabla_ambito_comparativa(self) -> pd.DataFrame:
         """

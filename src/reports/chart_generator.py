@@ -142,7 +142,13 @@ class ChartGenerator:
             return None
         
         # Ordenar por cantidad
+        # Ordenar por cantidad
         items = sorted(conteo.items(), key=lambda x: -x[1])
+        
+        # Filtrar valores 0 si no es comparativo
+        if not self.report.es_comparativo:
+            items = [item for item in items if item[1] > 0]
+            
         categorias = [item[0].replace('_', ' ') for item in items]
         valores = [item[1] for item in items]
         
@@ -163,6 +169,11 @@ class ChartGenerator:
         
         conteo = self.periodo.conteo_por_dia_semana()
         items = sorted(conteo.items(), key=lambda x: -x[1])
+        
+        # Filtrar valores 0 si no es comparativo
+        if not self.report.es_comparativo:
+            items = [item for item in items if item[1] > 0]
+            
         categorias = [item[0] for item in items]
         valores = [item[1] for item in items]
         
@@ -183,6 +194,11 @@ class ChartGenerator:
         
         conteo = self.periodo.conteo_por_franja_horaria()
         items = sorted(conteo.items(), key=lambda x: -x[1])
+        
+        # Filtrar valores 0 si no es comparativo
+        if not self.report.es_comparativo:
+            items = [item for item in items if item[1] > 0]
+            
         categorias = [item[0] for item in items]
         valores = [item[1] for item in items]
         
@@ -203,6 +219,11 @@ class ChartGenerator:
         
         conteo = self.periodo.conteo_por_movilidad()
         items = sorted(conteo.items(), key=lambda x: -x[1])
+        
+        # Filtrar valores 0 si no es comparativo
+        if not self.report.es_comparativo:
+            items = [item for item in items if item[1] > 0]
+            
         categorias = [item[0].replace('_', ' ') for item in items]
         valores = [item[1] for item in items]
         
@@ -226,6 +247,11 @@ class ChartGenerator:
             return None
         
         items = sorted(conteo.items(), key=lambda x: -x[1])
+        
+        # Filtrar valores 0 si no es comparativo
+        if not self.report.es_comparativo:
+            items = [item for item in items if item[1] > 0]
+            
         categorias = [item[0].replace('_', ' ') for item in items]
         valores = [item[1] for item in items]
         
@@ -246,6 +272,11 @@ class ChartGenerator:
         
         conteo = self.periodo.conteo_por_ambito()
         items = sorted(conteo.items(), key=lambda x: -x[1])
+        
+        # Filtrar valores 0 si no es comparativo
+        if not self.report.es_comparativo:
+            items = [item for item in items if item[1] > 0]
+            
         categorias = [item[0].replace('_', ' ') for item in items]
         valores = [item[1] for item in items]
         
@@ -406,6 +437,137 @@ class ChartGenerator:
         
         return fig
     
+    def grafico_comparativo_dias_semana(self) -> 'Figure':
+        """Genera gráfico comparativo de días de la semana."""
+        if not self.report.es_comparativo:
+            return self.grafico_dias_semana()
+        
+        p1 = self.report.periodo_principal
+        p2 = self.report.periodo_comparacion
+        
+        comparator = PeriodComparator(p1, p2)
+        comparaciones = comparator.comparar_dias_semana()
+        
+        categorias = [c.categoria for c in comparaciones]
+        valores_p1 = [c.valor_periodo_a for c in comparaciones]
+        valores_p2 = [c.valor_periodo_b for c in comparaciones]
+        
+        return self._crear_grafico_comparativo(
+            categorias, valores_p1, valores_p2, 
+            p1.rango_fechas, p2.rango_fechas,
+            'GRÁFICA COMPARATIVA DE DÍAS DE LA SEMANA'
+        )
+
+    def grafico_comparativo_franja_horaria(self) -> 'Figure':
+        """Genera gráfico comparativo de franja horaria."""
+        if not self.report.es_comparativo:
+            return self.grafico_franja_horaria()
+        
+        p1 = self.report.periodo_principal
+        p2 = self.report.periodo_comparacion
+        
+        comparator = PeriodComparator(p1, p2)
+        comparaciones = comparator.comparar_franjas_horarias()
+        
+        categorias = [c.categoria for c in comparaciones]
+        valores_p1 = [c.valor_periodo_a for c in comparaciones]
+        valores_p2 = [c.valor_periodo_b for c in comparaciones]
+        
+        return self._crear_grafico_comparativo(
+            categorias, valores_p1, valores_p2,
+            p1.rango_fechas, p2.rango_fechas,
+            'GRÁFICA COMPARATIVA DE FRANJA HORARIA'
+        )
+
+    def grafico_comparativo_movilidad(self) -> 'Figure':
+        """Genera gráfico comparativo de movilidad."""
+        if not self.report.es_comparativo:
+            return self.grafico_movilidad()
+        
+        p1 = self.report.periodo_principal
+        p2 = self.report.periodo_comparacion
+        
+        comparator = PeriodComparator(p1, p2)
+        comparaciones = comparator.comparar_movilidad()
+        
+        categorias = [c.categoria.replace('_', ' ') for c in comparaciones]
+        valores_p1 = [c.valor_periodo_a for c in comparaciones]
+        valores_p2 = [c.valor_periodo_b for c in comparaciones]
+        
+        return self._crear_grafico_comparativo(
+            categorias, valores_p1, valores_p2,
+            p1.rango_fechas, p2.rango_fechas,
+            'GRÁFICA COMPARATIVA DE MEDIOS DE MOVILIDAD'
+        )
+
+    def grafico_comparativo_armas(self) -> 'Figure':
+        """Genera gráfico comparativo de armas."""
+        if not self.report.es_comparativo:
+            return self.grafico_armas()
+        
+        p1 = self.report.periodo_principal
+        p2 = self.report.periodo_comparacion
+        
+        comparator = PeriodComparator(p1, p2)
+        comparaciones = comparator.comparar_armas()
+        
+        if not comparaciones:
+            return None
+            
+        categorias = [c.categoria.replace('_', ' ') for c in comparaciones]
+        valores_p1 = [c.valor_periodo_a for c in comparaciones]
+        valores_p2 = [c.valor_periodo_b for c in comparaciones]
+        
+        return self._crear_grafico_comparativo(
+            categorias, valores_p1, valores_p2,
+            p1.rango_fechas, p2.rango_fechas,
+            'GRÁFICA COMPARATIVA DE ARMAS/MEDIOS EN ROBOS'
+        )
+
+    def grafico_comparativo_ambito(self) -> 'Figure':
+        """Genera gráfico comparativo de ámbito."""
+        if not self.report.es_comparativo:
+            return self.grafico_ambito()
+        
+        p1 = self.report.periodo_principal
+        p2 = self.report.periodo_comparacion
+        
+        comparator = PeriodComparator(p1, p2)
+        comparaciones = comparator.comparar_ambitos()
+        
+        categorias = [c.categoria.replace('_', ' ') for c in comparaciones]
+        valores_p1 = [c.valor_periodo_a for c in comparaciones]
+        valores_p2 = [c.valor_periodo_b for c in comparaciones]
+        
+        return self._crear_grafico_comparativo(
+            categorias, valores_p1, valores_p2,
+            p1.rango_fechas, p2.rango_fechas,
+            'GRÁFICA COMPARATIVA DE ÁMBITO DE OCURRENCIA'
+        )
+
+    def _crear_grafico_comparativo(self, categorias, valores_p1, valores_p2, label1, label2, titulo) -> 'Figure':
+        """Helper para crear gráficos comparativos."""
+        fig, ax = self._create_figure(figsize=(12, 6))
+        
+        x = np.arange(len(categorias))
+        width = 0.35
+        
+        label1_short = label1[:20] if len(label1) > 20 else label1
+        label2_short = label2[:20] if len(label2) > 20 else label2
+        
+        bars1 = ax.bar(x - width/2, valores_p1, width, label=label1_short, color='#4169E1')
+        bars2 = ax.bar(x + width/2, valores_p2, width, label=label2_short, color='#FF6347')
+        
+        self._add_value_labels(ax, bars1, fontsize=8)
+        self._add_value_labels(ax, bars2, fontsize=8)
+        
+        ax.set_xticks(x)
+        ax.set_xticklabels(categorias, fontsize=9)
+        ax.legend()
+        
+        self._finalize_chart(fig, ax, titulo)
+        return fig
+    
     # ═══════════════════════════════════════════════════════════════════════
     # EXPORTACIÓN
     # ═══════════════════════════════════════════════════════════════════════
@@ -464,11 +626,16 @@ class ChartGenerator:
         charts = [
             ('delitos', self.grafico_delitos if not self.report.es_comparativo 
                         else self.grafico_comparativo_delitos),
-            ('dias_semana', self.grafico_dias_semana),
-            ('franja_horaria', self.grafico_franja_horaria),
-            ('movilidad', self.grafico_movilidad),
-            ('armas', self.grafico_armas),
-            ('ambito', self.grafico_ambito),
+            ('dias_semana', self.grafico_dias_semana if not self.report.es_comparativo
+                            else self.grafico_comparativo_dias_semana),
+            ('franja_horaria', self.grafico_franja_horaria if not self.report.es_comparativo
+                               else self.grafico_comparativo_franja_horaria),
+            ('movilidad', self.grafico_movilidad if not self.report.es_comparativo
+                          else self.grafico_comparativo_movilidad),
+            ('armas', self.grafico_armas if not self.report.es_comparativo
+                      else self.grafico_comparativo_armas),
+            ('ambito', self.grafico_ambito if not self.report.es_comparativo
+                       else self.grafico_comparativo_ambito),
             ('delito_dia', self.grafico_delito_dia),
             ('delito_franja', self.grafico_delito_franja),
         ]

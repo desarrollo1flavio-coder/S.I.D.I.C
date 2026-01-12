@@ -177,7 +177,7 @@ def format_date_range(start: date, end: date) -> str:
     elif start.year == end.year:
         return f"{start.day} DE {months[start.month - 1]} AL {end.day} DE {months[end.month - 1]} {end.year}"
     else:
-        return f"{start.day}/{start.month}/{start.year} AL {end.day}/{end.month}/{end.year}"
+        return f"{start.day} DE {months[start.month - 1]} {start.year} AL {end.day} DE {months[end.month - 1]} {end.year}"
 
 
 def is_date_in_range(fecha: date, start: date, end: date) -> bool:
