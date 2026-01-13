@@ -356,9 +356,14 @@ class ComparativePeriodSelector(QWidget):
         num_periodos = len(self.period_widgets)
         
         # Mostrar/ocultar selector de variación (visible con 2+ períodos)
-        self.variacion_container.setVisible(num_periodos >= 2)
+        # Usar hasattr porque puede llamarse antes de crear variacion_container
+        if hasattr(self, 'variacion_container'):
+            self.variacion_container.setVisible(num_periodos >= 2)
         
-        # Actualizar botón de agregar
+        # Actualizar botón de agregar (solo si existe)
+        if not hasattr(self, 'btn_add'):
+            return
+            
         if num_periodos >= MAX_PERIODOS_COMPARACION:
             self.btn_add.setEnabled(False)
             self.btn_add.setText(f"Máximo {MAX_PERIODOS_COMPARACION} períodos")
