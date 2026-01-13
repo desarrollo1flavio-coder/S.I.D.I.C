@@ -4,17 +4,22 @@ Widget selector de período.
 Permite seleccionar fechas de inicio y fin para el análisis.
 """
 from datetime import date, timedelta
-from typing import Optional, Tuple, TYPE_CHECKING
+from typing import Optional, Tuple, TYPE_CHECKING, Literal
 
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
     QLabel, QPushButton, QDateEdit, QGroupBox,
-    QRadioButton, QButtonGroup, QFrame, QSpinBox
+    QRadioButton, QButtonGroup, QFrame, QSpinBox,
+    QComboBox
 )
 from PyQt6.QtCore import pyqtSignal, Qt, QDate
 
 if TYPE_CHECKING:
     from .file_selector import FileSelector
+
+
+# Constante para máximo de períodos de comparación
+MAX_PERIODOS_COMPARACION = 6
 
 
 class PeriodSelector(QWidget):
@@ -269,16 +274,18 @@ class ComparativePeriodSelector(QWidget):
     """
     Widget para seleccionar períodos comparativos.
     
-    Permite comparar hasta 4 períodos simultáneos.
+    Permite comparar hasta 6 períodos simultáneos.
     Requiere mínimo 2 períodos para informes comparativos.
     """
     
     periods_changed = pyqtSignal(list)
+    modo_variacion_changed = pyqtSignal(str)  # Nueva señal para modo de variación
     
     def __init__(self, parent: Optional[QWidget] = None):
         super().__init__(parent)
         self.period_widgets = []
         self._file_selector = None
+        self._modo_variacion = "vs_principal"  # Valor por defecto
         self._setup_ui()
     
     def set_file_selector(self, file_selector: 'FileSelector'):
@@ -299,21 +306,82 @@ class ComparativePeriodSelector(QWidget):
         # Agregar 1 período de comparación por defecto
         self._add_period_row("Período Anterior")
         
-        # Botones
-        btn_layout = QHBoxLayout()
-        btn_layout.setSpacing(8)
+        # Botones y opciones
+        controls_layout = QHBoxLayout()
+        controls_layout.setSpacing(8)
         
-        btn_add = QPushButton("➕ Agregar otro período")
-        btn_add.setProperty("class", "secondary")
-        btn_add.clicked.connect(self._on_add_period)
-        btn_layout.addWidget(btn_add)
+        self.btn_add = QPushButton("➕ Agregar otro período")
+        self.btn_add.setProperty("class", "secondary")
+        self.btn_add.clicked.connect(self._on_add_period)
+        controls_layout.addWidget(self.btn_add)
         
-        btn_layout.addStretch()
-        layout.addLayout(btn_layout)
+        # Selector de modo de variación (visible con 2+ períodos de comparación)
+        self.variacion_container = QWidget()
+        variacion_layout = QHBoxLayout(self.variacion_container)
+        variacion_layout.setContentsMargins(10, 0, 0, 0)
+        variacion_layout.setSpacing(5)
+        
+        variacion_layout.addWidget(QLabel("Variación:"))
+        self.combo_variacion = QComboBox()
+        self.combo_variacion.addItems([
+            "vs Principal",
+            "vs Anterior", 
+            "Ambas"
+        ])
+        self.combo_variacion.setCurrentIndex(0)
+        self.combo_variacion.currentIndexChanged.connect(self._on_variacion_changed)
+        self.combo_variacion.setToolTip(
+            "vs Principal: Variación respecto al período principal\n"
+            "vs Anterior: Variación respecto al período anterior\n"
+            "Ambas: Muestra ambas variaciones en columnas separadas"
+        )
+        variacion_layout.addWidget(self.combo_variacion)
+        
+        self.variacion_container.setVisible(False)  # Oculto inicialmente
+        controls_layout.addWidget(self.variacion_container)
+        
+        controls_layout.addStretch()
+        
+        # Label informativo sobre límite de períodos
+        self.label_limite = QLabel("")
+        self.label_limite.setStyleSheet("color: #888888; font-size: 11px;")
+        controls_layout.addWidget(self.label_limite)
+        
+        layout.addLayout(controls_layout)
+        
+        self._update_ui_state()
+    
+    def _update_ui_state(self):
+        """Actualiza el estado de la UI según cantidad de períodos."""
+        num_periodos = len(self.period_widgets)
+        
+        # Mostrar/ocultar selector de variación (visible con 2+ períodos)
+        self.variacion_container.setVisible(num_periodos >= 2)
+        
+        # Actualizar botón de agregar
+        if num_periodos >= MAX_PERIODOS_COMPARACION:
+            self.btn_add.setEnabled(False)
+            self.btn_add.setText(f"Máximo {MAX_PERIODOS_COMPARACION} períodos")
+            self.label_limite.setText("")
+        else:
+            self.btn_add.setEnabled(True)
+            self.btn_add.setText("➕ Agregar otro período")
+            restantes = MAX_PERIODOS_COMPARACION - num_periodos
+            self.label_limite.setText(f"({restantes} más disponibles)")
+    
+    def _on_variacion_changed(self, index: int):
+        """Maneja cambio en el modo de variación."""
+        modos = ["vs_principal", "vs_anterior", "ambas"]
+        self._modo_variacion = modos[index]
+        self.modo_variacion_changed.emit(self._modo_variacion)
+    
+    def get_modo_variacion(self) -> str:
+        """Obtiene el modo de variación seleccionado."""
+        return self._modo_variacion
     
     def _add_period_row(self, label: str = None):
         """Agrega una fila de período."""
-        if len(self.period_widgets) >= 4:
+        if len(self.period_widgets) >= MAX_PERIODOS_COMPARACION:
             return
         
         row = QHBoxLayout()
@@ -384,6 +452,7 @@ class ComparativePeriodSelector(QWidget):
         })
         
         self.periods_container.addLayout(row)
+        self._update_ui_state()  # Actualizar estado de la UI
     
     def _on_start_changed(self, date_start: QDateEdit, date_end: QDateEdit, count_label: QLabel):
         """Maneja cambio en fecha de inicio con auto-corrección."""
@@ -460,7 +529,7 @@ class ComparativePeriodSelector(QWidget):
     
     def _on_add_period(self):
         """Agrega un nuevo período."""
-        if len(self.period_widgets) < 4:
+        if len(self.period_widgets) < MAX_PERIODOS_COMPARACION:
             self._add_period_row()
             self._on_period_changed()
     
@@ -478,6 +547,7 @@ class ComparativePeriodSelector(QWidget):
                 self.period_widgets.pop(i)
                 break
         
+        self._update_ui_state()  # Actualizar estado de la UI
         self._on_period_changed()
     
     def _on_period_changed(self):

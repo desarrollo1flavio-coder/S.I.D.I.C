@@ -32,6 +32,18 @@ from ..utils.constants import (
     DIAS_SEMANA,
     FranjaHoraria,
 )
+from ..utils.date_utils import formato_rango_abreviado
+
+
+# Paleta de colores para múltiples períodos (hasta 6)
+COLORES_PERIODOS = [
+    '#4169E1',  # Azul real
+    '#FF6347',  # Rojo tomate
+    '#32CD32',  # Verde lima
+    '#FFD700',  # Oro
+    '#9370DB',  # Púrpura medio
+    '#20B2AA',  # Verde mar claro
+]
 
 
 class ChartGenerator:
@@ -442,6 +454,26 @@ class ChartGenerator:
         if not self.report.es_comparativo:
             return self.grafico_dias_semana()
         
+        # Usar comparación múltiple si hay más de 2 períodos
+        if self._usar_comparacion_multiple():
+            try:
+                comparator = PeriodComparator(self.report.periodos)
+                comparaciones = comparator.comparar_dias_semana_multiple()
+                labels = self._get_labels_periodos()
+                
+                categorias = [c.categoria for c in comparaciones]
+                valores_por_periodo = []
+                for label in labels:
+                    valores_por_periodo.append([c.valores.get(label, 0) for c in comparaciones])
+                
+                return self._crear_grafico_comparativo_multiple(
+                    categorias, valores_por_periodo, labels,
+                    'GRÁFICA COMPARATIVA DE DÍAS DE LA SEMANA'
+                )
+            except Exception as e:
+                print(f"Error en gráfico múltiple días semana: {e}")
+        
+        # Comparación de 2 períodos (comportamiento original)
         p1 = self.report.periodo_principal
         p2 = self.report.periodo_comparacion
         
@@ -463,6 +495,26 @@ class ChartGenerator:
         if not self.report.es_comparativo:
             return self.grafico_franja_horaria()
         
+        # Usar comparación múltiple si hay más de 2 períodos
+        if self._usar_comparacion_multiple():
+            try:
+                comparator = PeriodComparator(self.report.periodos)
+                comparaciones = comparator.comparar_franjas_horarias_multiple()
+                labels = self._get_labels_periodos()
+                
+                categorias = [c.categoria for c in comparaciones]
+                valores_por_periodo = []
+                for label in labels:
+                    valores_por_periodo.append([c.valores.get(label, 0) for c in comparaciones])
+                
+                return self._crear_grafico_comparativo_multiple(
+                    categorias, valores_por_periodo, labels,
+                    'GRÁFICA COMPARATIVA DE FRANJA HORARIA'
+                )
+            except Exception as e:
+                print(f"Error en gráfico múltiple franja horaria: {e}")
+        
+        # Comparación de 2 períodos (comportamiento original)
         p1 = self.report.periodo_principal
         p2 = self.report.periodo_comparacion
         
@@ -484,6 +536,26 @@ class ChartGenerator:
         if not self.report.es_comparativo:
             return self.grafico_movilidad()
         
+        # Usar comparación múltiple si hay más de 2 períodos
+        if self._usar_comparacion_multiple():
+            try:
+                comparator = PeriodComparator(self.report.periodos)
+                comparaciones = comparator.comparar_movilidad_multiple()
+                labels = self._get_labels_periodos()
+                
+                categorias = [c.categoria.replace('_', ' ') for c in comparaciones]
+                valores_por_periodo = []
+                for label in labels:
+                    valores_por_periodo.append([c.valores.get(label, 0) for c in comparaciones])
+                
+                return self._crear_grafico_comparativo_multiple(
+                    categorias, valores_por_periodo, labels,
+                    'GRÁFICA COMPARATIVA DE MEDIOS DE MOVILIDAD'
+                )
+            except Exception as e:
+                print(f"Error en gráfico múltiple movilidad: {e}")
+        
+        # Comparación de 2 períodos (comportamiento original)
         p1 = self.report.periodo_principal
         p2 = self.report.periodo_comparacion
         
@@ -505,6 +577,27 @@ class ChartGenerator:
         if not self.report.es_comparativo:
             return self.grafico_armas()
         
+        # Usar comparación múltiple si hay más de 2 períodos
+        if self._usar_comparacion_multiple():
+            try:
+                comparator = PeriodComparator(self.report.periodos)
+                comparaciones = comparator.comparar_armas_multiple()
+                
+                if comparaciones:
+                    labels = self._get_labels_periodos()
+                    categorias = [c.categoria.replace('_', ' ') for c in comparaciones]
+                    valores_por_periodo = []
+                    for label in labels:
+                        valores_por_periodo.append([c.valores.get(label, 0) for c in comparaciones])
+                    
+                    return self._crear_grafico_comparativo_multiple(
+                        categorias, valores_por_periodo, labels,
+                        'GRÁFICA COMPARATIVA DE ARMAS/MEDIOS EN ROBOS'
+                    )
+            except Exception as e:
+                print(f"Error en gráfico múltiple armas: {e}")
+        
+        # Comparación de 2 períodos (comportamiento original)
         p1 = self.report.periodo_principal
         p2 = self.report.periodo_comparacion
         
@@ -529,6 +622,26 @@ class ChartGenerator:
         if not self.report.es_comparativo:
             return self.grafico_ambito()
         
+        # Usar comparación múltiple si hay más de 2 períodos
+        if self._usar_comparacion_multiple():
+            try:
+                comparator = PeriodComparator(self.report.periodos)
+                comparaciones = comparator.comparar_ambitos_multiple()
+                labels = self._get_labels_periodos()
+                
+                categorias = [c.categoria.replace('_', ' ') for c in comparaciones]
+                valores_por_periodo = []
+                for label in labels:
+                    valores_por_periodo.append([c.valores.get(label, 0) for c in comparaciones])
+                
+                return self._crear_grafico_comparativo_multiple(
+                    categorias, valores_por_periodo, labels,
+                    'GRÁFICA COMPARATIVA DE ÁMBITO DE OCURRENCIA'
+                )
+            except Exception as e:
+                print(f"Error en gráfico múltiple ámbito: {e}")
+        
+        # Comparación de 2 períodos (comportamiento original)
         p1 = self.report.periodo_principal
         p2 = self.report.periodo_comparacion
         
@@ -546,7 +659,7 @@ class ChartGenerator:
         )
 
     def _crear_grafico_comparativo(self, categorias, valores_p1, valores_p2, label1, label2, titulo) -> 'Figure':
-        """Helper para crear gráficos comparativos."""
+        """Helper para crear gráficos comparativos (2 períodos - retrocompatibilidad)."""
         fig, ax = self._create_figure(figsize=(12, 6))
         
         x = np.arange(len(categorias))
@@ -567,6 +680,81 @@ class ChartGenerator:
         
         self._finalize_chart(fig, ax, titulo)
         return fig
+    
+    def _crear_grafico_comparativo_multiple(
+        self,
+        categorias: List[str],
+        valores_por_periodo: List[List[int]],
+        labels: List[str],
+        titulo: str
+    ) -> 'Figure':
+        """
+        Helper para crear gráficos comparativos con N períodos.
+        
+        Args:
+            categorias: Lista de categorías (eje X)
+            valores_por_periodo: Lista de listas con valores de cada período
+            labels: Etiquetas para cada período
+            titulo: Título del gráfico
+        
+        Returns:
+            Figura de matplotlib con gráfico de barras agrupadas
+        """
+        n_periodos = len(valores_por_periodo)
+        n_categorias = len(categorias)
+        
+        # Ajustar tamaño de figura según cantidad de datos
+        fig_width = max(12, n_categorias * 1.5)
+        fig, ax = self._create_figure(figsize=(fig_width, 6))
+        
+        x = np.arange(n_categorias)
+        # Ancho de barra adaptativo: menor con más períodos
+        width = 0.8 / n_periodos
+        
+        # Crear barras para cada período
+        all_bars = []
+        for i, (valores, label) in enumerate(zip(valores_por_periodo, labels)):
+            # Calcular offset para centrar el grupo
+            offset = (i - n_periodos/2 + 0.5) * width
+            color = COLORES_PERIODOS[i % len(COLORES_PERIODOS)]
+            
+            # Abreviar etiqueta para leyenda
+            label_short = label[:15] if len(label) > 15 else label
+            
+            bars = ax.bar(x + offset, valores, width, label=label_short, 
+                         color=color, edgecolor='#333333', linewidth=0.5)
+            all_bars.append(bars)
+            
+            # Etiquetas de valor (fuente más pequeña con más períodos)
+            fontsize = max(6, 10 - n_periodos)
+            self._add_value_labels(ax, bars, fontsize=fontsize)
+        
+        ax.set_xticks(x)
+        ax.set_xticklabels(categorias, fontsize=max(7, 10 - n_periodos//2))
+        
+        # Leyenda fuera del gráfico si hay muchos períodos
+        if n_periodos > 3:
+            ax.legend(bbox_to_anchor=(1.02, 1), loc='upper left', fontsize=8)
+            plt.subplots_adjust(right=0.85)
+        else:
+            ax.legend(fontsize=9)
+        
+        self._finalize_chart(fig, ax, titulo)
+        return fig
+    
+    def _usar_comparacion_multiple(self) -> bool:
+        """Determina si usar comparación múltiple (más de 2 períodos)."""
+        return len(self.report.periodos) > 2
+    
+    def _get_labels_periodos(self) -> List[str]:
+        """Obtiene etiquetas abreviadas para los períodos."""
+        labels = []
+        for p in self.report.periodos:
+            if p.fecha_inicio and p.fecha_fin:
+                labels.append(formato_rango_abreviado(p.fecha_inicio, p.fecha_fin))
+            else:
+                labels.append(p.rango_fechas[:15])
+        return labels
     
     # ═══════════════════════════════════════════════════════════════════════
     # EXPORTACIÓN

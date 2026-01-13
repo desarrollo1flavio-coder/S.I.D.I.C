@@ -4,11 +4,16 @@ Comparador de períodos.
 Genera las comparaciones estadísticas entre múltiples períodos
 para los cuadros comparativos del informe.
 """
-from dataclasses import dataclass
-from typing import Dict, List, Any, Optional
+from dataclasses import dataclass, field
+from typing import Dict, List, Any, Optional, Literal, Union
 from enum import Enum
 
 from ..models.report_data import PeriodData
+from ..utils.date_utils import formato_rango_abreviado
+
+
+# Tipo para modo de variación
+ModoVariacion = Literal["vs_principal", "vs_anterior", "ambas"]
 
 
 class Tendencia(Enum):
@@ -21,7 +26,7 @@ class Tendencia(Enum):
 
 @dataclass
 class ComparacionItem:
-    """Resultado de comparación para un ítem."""
+    """Resultado de comparación para un ítem (retrocompatibilidad con 2 períodos)."""
     categoria: str
     valor_periodo_a: int
     valor_periodo_b: int
@@ -74,28 +79,94 @@ class ComparacionItem:
         }
 
 
+@dataclass
+class ComparacionItemMultiple:
+    """
+    Resultado de comparación para un ítem con múltiples períodos.
+    
+    Soporta hasta 6 períodos con variaciones calculadas según el modo seleccionado.
+    """
+    categoria: str
+    valores: Dict[str, int] = field(default_factory=dict)  # {label_periodo: valor}
+    variaciones_vs_principal: Dict[str, float] = field(default_factory=dict)  # {label: %}
+    variaciones_vs_anterior: Dict[str, float] = field(default_factory=dict)  # {label: %}
+    tendencias: Dict[str, Tendencia] = field(default_factory=dict)  # {label: tendencia}
+    
+    def get_variacion_formateada(self, label: str, modo: str = "vs_principal") -> str:
+        """Obtiene variación formateada para un período."""
+        variaciones = (self.variaciones_vs_principal if modo == "vs_principal" 
+                      else self.variaciones_vs_anterior)
+        
+        if label not in variaciones:
+            return "-"
+        
+        pct = variaciones[label]
+        tendencia = self.tendencias.get(label, Tendencia.IGUAL)
+        
+        if tendencia == Tendencia.NUEVO:
+            return "NUEVO"
+        
+        signo = "+" if pct > 0 else ""
+        return f"{signo}{pct:.2f}%"
+    
+    def get_tendencia_icono(self, label: str) -> str:
+        """Obtiene icono de tendencia para un período."""
+        tendencia = self.tendencias.get(label, Tendencia.IGUAL)
+        iconos = {
+            Tendencia.SUBIO: "▲",
+            Tendencia.BAJO: "▼",
+            Tendencia.IGUAL: "─",
+            Tendencia.NUEVO: "★"
+        }
+        return iconos.get(tendencia, "")
+
+
 class PeriodComparator:
     """
     Comparador de períodos para análisis estadístico.
     
-    Genera comparaciones entre dos o más períodos con
+    Genera comparaciones entre dos o más períodos (hasta 6) con
     cálculo de variaciones absolutas y porcentuales.
+    
+    Soporta tres modos de variación:
+    - "vs_principal": variación respecto al primer período
+    - "vs_anterior": variación respecto al período anterior
+    - "ambas": calcula ambas variaciones
     """
     
     def __init__(
         self,
-        periodo_a: PeriodData,
-        periodo_b: PeriodData
+        periodos: Union[List[PeriodData], PeriodData],
+        periodo_b: Optional[PeriodData] = None,
+        modo_variacion: ModoVariacion = "vs_principal"
     ):
         """
         Inicializa el comparador.
         
         Args:
-            periodo_a: Período base (anterior)
-            periodo_b: Período a comparar (actual)
+            periodos: Lista de períodos O período_a (para retrocompatibilidad)
+            periodo_b: Período B (solo si periodos es un PeriodData único)
+            modo_variacion: Modo de cálculo de variaciones
+        
+        Retrocompatibilidad:
+            PeriodComparator(periodo_a, periodo_b) funciona igual que antes
         """
-        self.periodo_a = periodo_a
-        self.periodo_b = periodo_b
+        # Detectar modo de inicialización para retrocompatibilidad
+        if isinstance(periodos, PeriodData):
+            # Modo legacy: periodo_a, periodo_b
+            self.periodos = [periodos]
+            if periodo_b:
+                self.periodos.append(periodo_b)
+            self.periodo_a = periodos
+            self.periodo_b = periodo_b
+        else:
+            # Modo nuevo: lista de períodos
+            self.periodos = periodos
+            self.periodo_a = periodos[0] if periodos else None
+            self.periodo_b = periodos[1] if len(periodos) > 1 else None
+        
+        self.modo_variacion = modo_variacion
+        self._labels_cache: Optional[List[str]] = None
     
     # ═══════════════════════════════════════════════════════════════════════
     # CÁLCULO DE VARIACIÓN
@@ -364,3 +435,119 @@ class PeriodComparator:
                 })
         
         return filas
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # COMPARACIONES MÚLTIPLES (N PERÍODOS)
+    # ═══════════════════════════════════════════════════════════════════════
+    
+    def get_labels_periodos(self, abreviado: bool = True) -> List[str]:
+        """
+        Obtiene las etiquetas de los períodos.
+        
+        Args:
+            abreviado: Si True, usa formato abreviado (Dic'25)
+        
+        Returns:
+            Lista de etiquetas para cada período.
+        """
+        if abreviado:
+            labels = []
+            for p in self.periodos:
+                if p.fecha_inicio and p.fecha_fin:
+                    labels.append(formato_rango_abreviado(p.fecha_inicio, p.fecha_fin))
+                else:
+                    labels.append(p.rango_fechas[:15])
+            return labels
+        else:
+            return [p.rango_fechas for p in self.periodos]
+    
+    def _comparar_conteos_multiple(
+        self,
+        obtener_conteo: callable
+    ) -> List[ComparacionItemMultiple]:
+        """
+        Compara conteos de múltiples períodos.
+        
+        Args:
+            obtener_conteo: Función que recibe un PeriodData y retorna Dict[str, int]
+        
+        Returns:
+            Lista de ComparacionItemMultiple ordenada por valor del período principal.
+        """
+        if len(self.periodos) < 2:
+            return []
+        
+        # Obtener conteos de todos los períodos
+        conteos = [obtener_conteo(p) for p in self.periodos]
+        labels = self.get_labels_periodos()
+        
+        # Obtener todas las categorías únicas
+        todas_claves = set()
+        for conteo in conteos:
+            todas_claves.update(conteo.keys())
+        todas_claves = sorted(todas_claves)
+        
+        resultados = []
+        
+        for clave in todas_claves:
+            item = ComparacionItemMultiple(categoria=clave)
+            
+            # Valores de cada período
+            for i, (conteo, label) in enumerate(zip(conteos, labels)):
+                valor = conteo.get(clave, 0)
+                item.valores[label] = valor
+            
+            # Calcular variaciones
+            valor_principal = conteos[0].get(clave, 0)
+            
+            for i, (conteo, label) in enumerate(zip(conteos, labels)):
+                valor = conteo.get(clave, 0)
+                
+                # Variación vs principal (siempre vs período 0)
+                if i > 0:
+                    _, pct_principal, tend_principal = self._calcular_variacion(
+                        valor_principal, valor
+                    )
+                    item.variaciones_vs_principal[label] = pct_principal
+                    item.tendencias[label] = tend_principal
+                
+                # Variación vs anterior
+                if i > 0:
+                    valor_anterior = conteos[i - 1].get(clave, 0)
+                    _, pct_anterior, _ = self._calcular_variacion(
+                        valor_anterior, valor
+                    )
+                    item.variaciones_vs_anterior[label] = pct_anterior
+            
+            resultados.append(item)
+        
+        # Ordenar por valor del período principal descendente
+        return sorted(resultados, key=lambda x: -list(x.valores.values())[0] if x.valores else 0)
+    
+    def comparar_delitos_multiple(self) -> List[ComparacionItemMultiple]:
+        """Compara delitos entre múltiples períodos."""
+        return self._comparar_conteos_multiple(lambda p: p.conteo_por_delito())
+    
+    def comparar_dias_semana_multiple(self) -> List[ComparacionItemMultiple]:
+        """Compara días de la semana entre múltiples períodos."""
+        return self._comparar_conteos_multiple(lambda p: p.conteo_por_dia_semana())
+    
+    def comparar_franjas_horarias_multiple(self) -> List[ComparacionItemMultiple]:
+        """Compara franjas horarias entre múltiples períodos."""
+        return self._comparar_conteos_multiple(lambda p: p.conteo_por_franja_horaria())
+    
+    def comparar_movilidad_multiple(self) -> List[ComparacionItemMultiple]:
+        """Compara movilidad entre múltiples períodos."""
+        return self._comparar_conteos_multiple(lambda p: p.conteo_por_movilidad())
+    
+    def comparar_armas_multiple(self) -> List[ComparacionItemMultiple]:
+        """Compara armas entre múltiples períodos."""
+        return self._comparar_conteos_multiple(lambda p: p.conteo_por_arma())
+    
+    def comparar_ambitos_multiple(self) -> List[ComparacionItemMultiple]:
+        """Compara ámbitos entre múltiples períodos."""
+        return self._comparar_conteos_multiple(lambda p: p.conteo_por_ambito())
+    
+    def comparar_aprehendidos_multiple(self) -> List[ComparacionItemMultiple]:
+        """Compara clasificación de aprehendidos entre múltiples períodos."""
+        return self._comparar_conteos_multiple(lambda p: p.conteo_aprehendidos_clasificacion())

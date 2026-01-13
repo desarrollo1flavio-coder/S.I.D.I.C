@@ -3,7 +3,7 @@ Modelos de datos para reportes y períodos.
 """
 from dataclasses import dataclass, field
 from datetime import date
-from typing import List, Dict, Optional, Any
+from typing import List, Dict, Optional, Any, Literal
 from collections import Counter
 
 from .crime_record import CrimeRecord
@@ -338,12 +338,21 @@ class PeriodData:
         return filas
 
 
+from typing import Literal
+
+# Constante: máximo de períodos permitidos para comparación
+MAX_PERIODOS_COMPARACION = 6
+
+# Tipos de modo de variación
+ModoVariacion = Literal["vs_principal", "vs_anterior", "ambas"]
+
+
 @dataclass
 class ReportData:
     """
     Contenedor principal de datos para generación de reportes.
     
-    Puede contener uno o más períodos para comparación.
+    Puede contener uno o más períodos para comparación (máximo 6).
     """
     
     # Información general
@@ -353,6 +362,12 @@ class ReportData:
     
     # Períodos
     periodos: List[PeriodData] = field(default_factory=list)
+    
+    # Configuración de variaciones para informes comparativos
+    # "vs_principal": variación respecto al período principal
+    # "vs_anterior": variación respecto al período anterior
+    # "ambas": muestra ambas variaciones en columnas separadas
+    modo_variacion: ModoVariacion = "vs_principal"
     
     # ═══════════════════════════════════════════════════════════════════════
     # PROPIEDADES
@@ -364,14 +379,39 @@ class ReportData:
         return len(self.periodos) > 1
     
     @property
+    def num_periodos(self) -> int:
+        """Número total de períodos."""
+        return len(self.periodos)
+    
+    @property
     def periodo_principal(self) -> Optional[PeriodData]:
         """Primer período (el principal)."""
         return self.periodos[0] if self.periodos else None
     
     @property
     def periodo_comparacion(self) -> Optional[PeriodData]:
-        """Segundo período (para comparación)."""
+        """Segundo período (para comparación). Mantiene retrocompatibilidad."""
         return self.periodos[1] if len(self.periodos) > 1 else None
+    
+    @property
+    def periodos_comparacion(self) -> List[PeriodData]:
+        """
+        Todos los períodos de comparación (todos excepto el principal).
+        
+        Returns:
+            Lista de períodos desde el índice 1 en adelante.
+        """
+        return self.periodos[1:] if len(self.periodos) > 1 else []
+    
+    @property
+    def todos_los_periodos(self) -> List[PeriodData]:
+        """
+        Todos los períodos incluyendo el principal.
+        
+        Returns:
+            Lista completa de períodos.
+        """
+        return self.periodos
     
     # ═══════════════════════════════════════════════════════════════════════
     # MÉTODOS

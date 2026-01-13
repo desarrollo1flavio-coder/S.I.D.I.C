@@ -250,7 +250,8 @@ class DataProcessor:
     def create_report(
         self,
         periodos: List[Tuple[str, date, date]],
-        titulo: str = "INFORME DELICTUAL"
+        titulo: str = "INFORME DELICTUAL",
+        modo_variacion: str = "vs_principal"
     ) -> ReportData:
         """
         Crea un ReportData completo.
@@ -258,6 +259,8 @@ class DataProcessor:
         Args:
             periodos: Lista de tuplas (nombre, fecha_inicio, fecha_fin)
             titulo: Título del informe
+            modo_variacion: Modo de cálculo de variaciones 
+                           ("vs_principal", "vs_anterior", "ambas")
         
         Returns:
             ReportData listo para generar reportes.
@@ -265,7 +268,8 @@ class DataProcessor:
         report = ReportData(
             titulo=titulo,
             jurisdiccion=self._jurisdiccion_nombre,
-            fecha_generacion=date.today()
+            fecha_generacion=date.today(),
+            modo_variacion=modo_variacion
         )
         
         for nombre, inicio, fin in periodos:

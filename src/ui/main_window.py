@@ -102,9 +102,13 @@ class ReportGeneratorThread(QThread):
                     nombre = f"Período {i + 1}"
                     periodos_formateados.append((nombre, inicio, fin))
                 
+                # Obtener modo de variación de las opciones
+                modo_variacion = self.options.get('modo_variacion', 'vs_principal')
+                
                 report = processor.create_report(
                     periodos_formateados,
-                    titulo=self.options.get('titulo', 'Informe Delictual')
+                    titulo=self.options.get('titulo', 'Informe Delictual'),
+                    modo_variacion=modo_variacion
                 )
             else:
                 # Reporte simple
@@ -942,6 +946,10 @@ class MainWindow(QMainWindow):
             'titulo': 'Informe Delictual',
             'jurisdiccion': ''
         }
+        
+        # Agregar modo de variación si es modo comparativo
+        if self.check_comparativo_mode.isChecked() and len(periods) > 1:
+            options['modo_variacion'] = self.comparative_periods.get_modo_variacion()
         
         # Iniciar generación
         self._start_generation(

@@ -183,3 +183,52 @@ def format_date_range(start: date, end: date) -> str:
 def is_date_in_range(fecha: date, start: date, end: date) -> bool:
     """Verifica si una fecha está dentro de un rango (inclusive)."""
     return start <= fecha <= end
+
+
+def formato_fecha_abreviada(fecha: date) -> str:
+    """
+    Formatea una fecha de forma abreviada para etiquetas de gráficos.
+    
+    Ejemplo: date(2025, 12, 14) -> "Dic'25"
+    
+    Args:
+        fecha: Fecha a formatear
+    
+    Returns:
+        String con formato "Mes'AA" (ej: "Dic'25")
+    """
+    meses_abrev = [
+        "Ene", "Feb", "Mar", "Abr", "May", "Jun",
+        "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"
+    ]
+    
+    mes = meses_abrev[fecha.month - 1]
+    año = str(fecha.year)[-2:]  # Últimos 2 dígitos
+    
+    return f"{mes}'{año}"
+
+
+def formato_rango_abreviado(start: date, end: date) -> str:
+    """
+    Formatea un rango de fechas de forma abreviada.
+    
+    Ejemplo: "14 Dic - 13 Ene'26"
+    
+    Args:
+        start: Fecha de inicio
+        end: Fecha de fin
+    
+    Returns:
+        String con rango abreviado
+    """
+    meses_abrev = [
+        "Ene", "Feb", "Mar", "Abr", "May", "Jun",
+        "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"
+    ]
+    
+    if start.year == end.year and start.month == end.month:
+        return f"{start.day}-{end.day} {meses_abrev[end.month - 1]}'{str(end.year)[-2:]}"
+    elif start.year == end.year:
+        return f"{start.day} {meses_abrev[start.month - 1]} - {end.day} {meses_abrev[end.month - 1]}'{str(end.year)[-2:]}"
+    else:
+        return f"{start.day} {meses_abrev[start.month - 1]}'{str(start.year)[-2:]} - {end.day} {meses_abrev[end.month - 1]}'{str(end.year)[-2:]}"

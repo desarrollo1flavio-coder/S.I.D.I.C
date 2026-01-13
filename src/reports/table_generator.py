@@ -4,18 +4,19 @@ Generador de tablas/cuadros para reportes.
 Genera todas las tablas estadísticas con formato adecuado
 para exportación a Excel y Word.
 """
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Callable
 from dataclasses import dataclass
 import pandas as pd
 
-from ..models.report_data import PeriodData, ReportData
-from ..core.period_comparator import PeriodComparator
+from ..models.report_data import PeriodData, ReportData, MAX_PERIODOS_COMPARACION
+from ..core.period_comparator import PeriodComparator, ComparacionItemMultiple
 from ..utils.constants import (
     DIAS_SEMANA,
     FranjaHoraria,
     SIMBOLOS_DELITOS,
     SimboloDelito,
 )
+from ..utils.date_utils import formato_rango_abreviado
 
 
 @dataclass
@@ -33,6 +34,7 @@ class TableGenerator:
     Generador de tablas estadísticas para reportes S.I.D.I.C.
     
     Genera todas las tablas necesarias con formato consistente.
+    Soporta hasta 6 períodos para tablas comparativas.
     """
     
     def __init__(self, report_data: ReportData):
@@ -58,6 +60,105 @@ class TableGenerator:
     def _format_porcentaje(self, valor: float) -> str:
         """Formatea porcentaje para mostrar."""
         return f"{valor:.2f}%"
+    
+    def _usar_comparacion_multiple(self) -> bool:
+        """Determina si usar comparación múltiple (más de 2 períodos)."""
+        return len(self.report.periodos) > 2
+    
+    def _get_labels_periodos(self, abreviado: bool = True) -> List[str]:
+        """
+        Obtiene etiquetas para los períodos.
+        
+        Args:
+            abreviado: Si True, usa formato corto para múltiples períodos
+        
+        Returns:
+            Lista de etiquetas
+        """
+        if abreviado and self._usar_comparacion_multiple():
+            labels = []
+            for p in self.report.periodos:
+                if p.fecha_inicio and p.fecha_fin:
+                    labels.append(formato_rango_abreviado(p.fecha_inicio, p.fecha_fin))
+                else:
+                    labels.append(p.rango_fechas[:15])
+            return labels
+        else:
+            return [p.rango_fechas for p in self.report.periodos]
+    
+    def _generar_tabla_comparativa_multiple(
+        self,
+        columna_categoria: str,
+        comparaciones: List[ComparacionItemMultiple],
+        labels: List[str]
+    ) -> pd.DataFrame:
+        """
+        Genera DataFrame para tabla comparativa con múltiples períodos.
+        
+        Args:
+            columna_categoria: Nombre de la primera columna
+            comparaciones: Lista de ComparacionItemMultiple
+            labels: Etiquetas de los períodos
+        
+        Returns:
+            DataFrame con columnas dinámicas según número de períodos
+        """
+        modo = self.report.modo_variacion
+        data = []
+        
+        # Calcular totales por período
+        totales = {label: 0 for label in labels}
+        for comp in comparaciones:
+            for label, valor in comp.valores.items():
+                if label in totales:
+                    totales[label] += valor
+        
+        for comp in comparaciones:
+            row = {columna_categoria: comp.categoria}
+            
+            # Agregar valor de cada período
+            for label in labels:
+                row[label] = comp.valores.get(label, 0)
+            
+            # Agregar variaciones según modo
+            if modo in ("vs_principal", "ambas"):
+                for i, label in enumerate(labels[1:], 1):  # Saltar período principal
+                    var = comp.variaciones_vs_principal.get(label, 0)
+                    icono = comp.get_tendencia_icono(label)
+                    signo = "+" if var > 0 else ""
+                    row[f"Var.P{i}"] = f"{signo}{var:.1f}% {icono}"
+            
+            if modo == "vs_anterior":
+                for i, label in enumerate(labels[1:], 1):
+                    var = comp.variaciones_vs_anterior.get(label, 0)
+                    icono = comp.get_tendencia_icono(label)
+                    signo = "+" if var > 0 else ""
+                    row[f"Var.{i}"] = f"{signo}{var:.1f}% {icono}"
+            
+            # Porcentaje basado en el período principal
+            total_principal = totales.get(labels[0], 0)
+            valor_principal = comp.valores.get(labels[0], 0)
+            pct = self._calcular_porcentaje(valor_principal, total_principal)
+            row['PORCENTAJE'] = self._format_porcentaje(pct)
+            
+            data.append(row)
+        
+        # Fila de totales
+        total_row = {columna_categoria: 'TOTAL'}
+        for label in labels:
+            total_row[label] = totales.get(label, 0)
+        
+        if modo in ("vs_principal", "ambas"):
+            for i in range(1, len(labels)):
+                total_row[f"Var.P{i}"] = "-"
+        if modo == "vs_anterior":
+            for i in range(1, len(labels)):
+                total_row[f"Var.{i}"] = "-"
+        
+        total_row['PORCENTAJE'] = '100,00%'
+        data.append(total_row)
+        
+        return pd.DataFrame(data)
     
     def _conteo_a_dataframe(
         self,
@@ -283,10 +384,30 @@ class TableGenerator:
     def generar_tabla_delitos_comparativa(self) -> pd.DataFrame:
         """
         Genera tabla comparativa de delitos entre períodos.
+        Soporta hasta 6 períodos con columnas dinámicas.
         """
         if not self.report.es_comparativo:
             return self.generar_tabla_delitos()
         
+        # Usar comparación múltiple si hay más de 2 períodos
+        if self._usar_comparacion_multiple():
+            try:
+                comparator = PeriodComparator(
+                    self.report.periodos,
+                    modo_variacion=self.report.modo_variacion
+                )
+                comparaciones = comparator.comparar_delitos_multiple()
+                labels = self._get_labels_periodos()
+                
+                return self._generar_tabla_comparativa_multiple(
+                    'DELITOS CON MODALIDADES',
+                    comparaciones,
+                    labels
+                )
+            except Exception as e:
+                print(f"Error generando tabla múltiple delitos: {e}")
+        
+        # Comparación de 2 períodos (comportamiento original)
         p1 = self.report.periodo_principal
         p2 = self.report.periodo_comparacion
         
@@ -359,10 +480,31 @@ class TableGenerator:
     def generar_tabla_dias_semana_comparativa(self) -> pd.DataFrame:
         """
         Genera tabla comparativa de hechos por día de la semana entre períodos.
+        Soporta hasta 6 períodos con columnas dinámicas.
         """
         if not self.report.es_comparativo:
             return self.generar_tabla_dias_semana()
         
+        # Usar comparación múltiple si hay más de 2 períodos
+        if self._usar_comparacion_multiple():
+            try:
+                comparator = PeriodComparator(
+                    self.report.periodos,
+                    modo_variacion=self.report.modo_variacion
+                )
+                comparaciones = comparator.comparar_dias_semana_multiple()
+                labels = self._get_labels_periodos()
+                
+                return self._generar_tabla_comparativa_multiple(
+                    'DÍAS DE LA SEMANA EN QUE OCURRIERON LOS HECHOS',
+                    comparaciones,
+                    labels
+                )
+            except Exception as e:
+                print(f"Error generando tabla múltiple días semana: {e}")
+                # Fallback a comparación simple
+        
+        # Comparación de 2 períodos (comportamiento original)
         p1 = self.report.periodo_principal
         p2 = self.report.periodo_comparacion
         
@@ -430,10 +572,30 @@ class TableGenerator:
     def generar_tabla_franja_horaria_comparativa(self) -> pd.DataFrame:
         """
         Genera tabla comparativa de hechos por franja horaria entre períodos.
+        Soporta hasta 6 períodos con columnas dinámicas.
         """
         if not self.report.es_comparativo:
             return self.generar_tabla_franja_horaria()
         
+        # Usar comparación múltiple si hay más de 2 períodos
+        if self._usar_comparacion_multiple():
+            try:
+                comparator = PeriodComparator(
+                    self.report.periodos,
+                    modo_variacion=self.report.modo_variacion
+                )
+                comparaciones = comparator.comparar_franjas_horarias_multiple()
+                labels = self._get_labels_periodos()
+                
+                return self._generar_tabla_comparativa_multiple(
+                    'FRANJA HORARIA EN QUE OCURRIERON LOS HECHOS',
+                    comparaciones,
+                    labels
+                )
+            except Exception as e:
+                print(f"Error generando tabla múltiple franja horaria: {e}")
+        
+        # Comparación de 2 períodos (comportamiento original)
         p1 = self.report.periodo_principal
         p2 = self.report.periodo_comparacion
         
@@ -501,10 +663,30 @@ class TableGenerator:
     def generar_tabla_movilidad_comparativa(self) -> pd.DataFrame:
         """
         Genera tabla comparativa de medios de movilidad entre períodos.
+        Soporta hasta 6 períodos con columnas dinámicas.
         """
         if not self.report.es_comparativo:
             return self.generar_tabla_movilidad()
         
+        # Usar comparación múltiple si hay más de 2 períodos
+        if self._usar_comparacion_multiple():
+            try:
+                comparator = PeriodComparator(
+                    self.report.periodos,
+                    modo_variacion=self.report.modo_variacion
+                )
+                comparaciones = comparator.comparar_movilidad_multiple()
+                labels = self._get_labels_periodos()
+                
+                return self._generar_tabla_comparativa_multiple(
+                    'MEDIOS DE MOVILIDAD UTILIZADOS',
+                    comparaciones,
+                    labels
+                )
+            except Exception as e:
+                print(f"Error generando tabla múltiple movilidad: {e}")
+        
+        # Comparación de 2 períodos (comportamiento original)
         p1 = self.report.periodo_principal
         p2 = self.report.periodo_comparacion
         
@@ -579,10 +761,31 @@ class TableGenerator:
     def generar_tabla_armas_comparativa(self) -> pd.DataFrame:
         """
         Genera tabla comparativa de armas/medios entre períodos.
+        Soporta hasta 6 períodos con columnas dinámicas.
         """
         if not self.report.es_comparativo:
             return self.generar_tabla_armas()
         
+        # Usar comparación múltiple si hay más de 2 períodos
+        if self._usar_comparacion_multiple():
+            try:
+                comparator = PeriodComparator(
+                    self.report.periodos,
+                    modo_variacion=self.report.modo_variacion
+                )
+                comparaciones = comparator.comparar_armas_multiple()
+                labels = self._get_labels_periodos()
+                
+                if comparaciones:
+                    return self._generar_tabla_comparativa_multiple(
+                        'MEDIOS O ARMAS UTILIZADAS EN ROBOS AGRAVADOS',
+                        comparaciones,
+                        labels
+                    )
+            except Exception as e:
+                print(f"Error generando tabla múltiple armas: {e}")
+        
+        # Comparación de 2 períodos (comportamiento original)
         p1 = self.report.periodo_principal
         p2 = self.report.periodo_comparacion
         
@@ -653,10 +856,30 @@ class TableGenerator:
     def generar_tabla_ambito_comparativa(self) -> pd.DataFrame:
         """
         Genera tabla comparativa de ámbito de ocurrencia entre períodos.
+        Soporta hasta 6 períodos con columnas dinámicas.
         """
         if not self.report.es_comparativo:
             return self.generar_tabla_ambito()
         
+        # Usar comparación múltiple si hay más de 2 períodos
+        if self._usar_comparacion_multiple():
+            try:
+                comparator = PeriodComparator(
+                    self.report.periodos,
+                    modo_variacion=self.report.modo_variacion
+                )
+                comparaciones = comparator.comparar_ambitos_multiple()
+                labels = self._get_labels_periodos()
+                
+                return self._generar_tabla_comparativa_multiple(
+                    'AMBITO DE OCURRENCIA DELICTUAL',
+                    comparaciones,
+                    labels
+                )
+            except Exception as e:
+                print(f"Error generando tabla múltiple ámbito: {e}")
+        
+        # Comparación de 2 períodos (comportamiento original)
         p1 = self.report.periodo_principal
         p2 = self.report.periodo_comparacion
         
@@ -854,10 +1077,31 @@ class TableGenerator:
     def generar_tabla_aprehendidos_clasificacion_comparativa(self) -> pd.DataFrame:
         """
         Genera tabla comparativa de aprehendidos por clasificación entre períodos.
+        Soporta hasta 6 períodos con columnas dinámicas.
         """
         if not self.report.es_comparativo:
             return self.generar_tabla_aprehendidos_clasificacion()
         
+        # Usar comparación múltiple si hay más de 2 períodos
+        if self._usar_comparacion_multiple():
+            try:
+                comparator = PeriodComparator(
+                    self.report.periodos,
+                    modo_variacion=self.report.modo_variacion
+                )
+                comparaciones = comparator.comparar_aprehendidos_multiple()
+                labels = self._get_labels_periodos()
+                
+                if comparaciones:
+                    return self._generar_tabla_comparativa_multiple(
+                        'CLASIFICACIÓN',
+                        comparaciones,
+                        labels
+                    )
+            except Exception as e:
+                print(f"Error generando tabla múltiple aprehendidos: {e}")
+        
+        # Comparación de 2 períodos (comportamiento original)
         p1 = self.report.periodo_principal
         p2 = self.report.periodo_comparacion
         
