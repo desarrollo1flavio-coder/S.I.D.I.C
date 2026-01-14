@@ -114,6 +114,10 @@ class TableGenerator:
                     totales[label] += valor
         
         for comp in comparaciones:
+            # Filtrar filas donde TODOS los períodos son 0
+            if all(comp.valores.get(label, 0) == 0 for label in labels):
+                continue
+            
             row = {columna_categoria: comp.categoria}
             
             # Agregar valor de cada período
@@ -160,6 +164,24 @@ class TableGenerator:
         
         return pd.DataFrame(data)
     
+    def _orden_categoria(self, categoria: str) -> int:
+        """
+        Define el orden de prioridad para categorías de delitos.
+        ROBOS siempre primero, luego por valor numérico.
+        
+        Returns:
+            Número de prioridad (menor = más importante)
+        """
+        orden = {
+            'ROBOS': 0,
+            'TENTATIVA DE ROBOS': 1,
+            'HURTOS': 2,
+            'TENTATIVA DE HURTOS': 3,
+            'ESTAFAS': 4,
+            'OTROS DELITOS': 5,
+        }
+        return orden.get(categoria.upper(), 99)
+    
     def _conteo_a_dataframe(
         self,
         conteo: Dict[str, int],
@@ -172,7 +194,8 @@ class TableGenerator:
         """
         items = list(conteo.items())
         if ordenar:
-            items = sorted(items, key=lambda x: -x[1])
+            # Ordenar por valor descendente, y alfabéticamente en caso de empate
+            items = sorted(items, key=lambda x: (-x[1], x[0]))
         
         total = sum(conteo.values())
         

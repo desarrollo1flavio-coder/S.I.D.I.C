@@ -94,6 +94,9 @@ class ReportGeneratorThread(QThread):
             
             self.progress.emit(40, "Generando reporte...")
             
+            # Obtener categorías incluidas desde opciones
+            categorias_incluidas = self.options.get('categorias_incluidas', [])
+            
             # Crear reporte
             if len(self.periods) > 1:
                 # Reporte comparativo - crear lista de periodos con nombres
@@ -105,17 +108,20 @@ class ReportGeneratorThread(QThread):
                 # Obtener modo de variación de las opciones
                 modo_variacion = self.options.get('modo_variacion', 'vs_principal')
                 
+                # Crear reporte con filtrado por categorías
                 report = processor.create_report(
                     periodos_formateados,
                     titulo=self.options.get('titulo', 'Informe Delictual'),
-                    modo_variacion=modo_variacion
+                    modo_variacion=modo_variacion,
+                    categorias_incluidas=categorias_incluidas
                 )
             else:
                 # Reporte simple
                 report = processor.create_single_period_report(
                     start_date,
                     end_date,
-                    titulo=self.options.get('titulo', 'Informe Delictual')
+                    titulo=self.options.get('titulo', 'Informe Delictual'),
+                    categorias_incluidas=categorias_incluidas
                 )
             
             self.progress.emit(50, "Generando tablas...")
@@ -621,6 +627,32 @@ class MainWindow(QMainWindow):
         checks_layout.addStretch()
         options_layout.addLayout(checks_layout)
         
+        # Checkboxes de categorías de delitos
+        category_layout = QHBoxLayout()
+        
+        self.check_incluir_robos = QCheckBox("Incluir ROBOS")
+        self.check_incluir_robos.setChecked(True)
+        self.check_incluir_robos.setToolTip("Incluir robos y tentativas de robo en el informe")
+        category_layout.addWidget(self.check_incluir_robos)
+        
+        self.check_incluir_hurtos = QCheckBox("Incluir HURTOS")
+        self.check_incluir_hurtos.setChecked(True)
+        self.check_incluir_hurtos.setToolTip("Incluir hurtos y tentativas de hurto en el informe")
+        category_layout.addWidget(self.check_incluir_hurtos)
+        
+        self.check_incluir_estafas = QCheckBox("Incluir ESTAFAS")
+        self.check_incluir_estafas.setChecked(True)
+        self.check_incluir_estafas.setToolTip("Incluir estafas y tentativas de estafa en el informe")
+        category_layout.addWidget(self.check_incluir_estafas)
+        
+        self.check_incluir_otros = QCheckBox("Incluir OTROS")
+        self.check_incluir_otros.setChecked(True)
+        self.check_incluir_otros.setToolTip("Incluir otros delitos no clasificados en el informe")
+        category_layout.addWidget(self.check_incluir_otros)
+        
+        category_layout.addStretch()
+        options_layout.addLayout(category_layout)
+        
         content_layout.addWidget(options_group)
         content_layout.addStretch()
         
@@ -946,6 +978,24 @@ class MainWindow(QMainWindow):
             'titulo': 'Informe Delictual',
             'jurisdiccion': ''
         }
+        
+        # Agregar categorías de delitos incluidas
+        categorias_incluidas = []
+        if self.check_incluir_robos.isChecked():
+            categorias_incluidas.extend(['ROBOS', 'TENTATIVA DE ROBOS'])
+        if self.check_incluir_hurtos.isChecked():
+            categorias_incluidas.extend(['HURTOS', 'TENTATIVA DE HURTOS'])
+        if self.check_incluir_estafas.isChecked():
+            categorias_incluidas.append('ESTAFAS')
+        if self.check_incluir_otros.isChecked():
+            categorias_incluidas.append('OTROS DELITOS')
+        
+        # Si no hay ninguna categoría seleccionada, incluir todas
+        if not categorias_incluidas:
+            categorias_incluidas = ['ROBOS', 'TENTATIVA DE ROBOS', 'HURTOS', 
+                                   'TENTATIVA DE HURTOS', 'ESTAFAS', 'OTROS DELITOS']
+        
+        options['categorias_incluidas'] = categorias_incluidas
         
         # Agregar modo de variación si es modo comparativo
         if self.check_comparativo_mode.isChecked() and len(periods) > 1:

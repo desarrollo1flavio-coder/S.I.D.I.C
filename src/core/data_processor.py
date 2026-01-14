@@ -213,11 +213,33 @@ class DataProcessor:
         
         return hechos, mencionados, aprehendidos
     
+    def filter_by_categories(
+        self,
+        hechos: List[CrimeRecord],
+        categorias: List[str]
+    ) -> List[CrimeRecord]:
+        """
+        Filtra hechos por categorías de delito.
+        
+        Args:
+            hechos: Lista de hechos a filtrar
+            categorias: Lista de categorías a incluir (ej: ['ROBOS', 'ESTAFAS'])
+                       Si está vacía, se incluyen todos los hechos.
+        
+        Returns:
+            Lista de hechos filtrados por categoría.
+        """
+        if not categorias:
+            return hechos
+        
+        return [h for h in hechos if h.categoria.value in categorias]
+    
     def create_period_data(
         self,
         nombre: str,
         fecha_inicio: date,
-        fecha_fin: date
+        fecha_fin: date,
+        categorias_incluidas: Optional[List[str]] = None
     ) -> PeriodData:
         """
         Crea un objeto PeriodData con los datos filtrados.
@@ -226,6 +248,7 @@ class DataProcessor:
             nombre: Nombre identificador del período
             fecha_inicio: Fecha de inicio
             fecha_fin: Fecha de fin
+            categorias_incluidas: Lista de categorías a incluir. Si es None, incluye todas.
         
         Returns:
             PeriodData con todos los datos del período.
@@ -233,6 +256,13 @@ class DataProcessor:
         hechos, mencionados, aprehendidos = self.filter_by_period(
             fecha_inicio, fecha_fin
         )
+        
+        # Aplicar filtrado por categorías si se especifica
+        if categorias_incluidas is not None:
+            hechos = self.filter_by_categories(hechos, categorias_incluidas)
+            # Nota: mencionados y aprehendidos no se filtran por categoría
+            # ya que no existe campo de relación directa con los hechos.
+            # Solo están filtrados por período temporal.
         
         return PeriodData(
             nombre=nombre,
@@ -251,7 +281,8 @@ class DataProcessor:
         self,
         periodos: List[Tuple[str, date, date]],
         titulo: str = "INFORME DELICTUAL",
-        modo_variacion: str = "vs_principal"
+        modo_variacion: str = "vs_principal",
+        categorias_incluidas: Optional[List[str]] = None
     ) -> ReportData:
         """
         Crea un ReportData completo.
@@ -261,6 +292,7 @@ class DataProcessor:
             titulo: Título del informe
             modo_variacion: Modo de cálculo de variaciones 
                            ("vs_principal", "vs_anterior", "ambas")
+            categorias_incluidas: Lista de categorías a incluir. Si es None, incluye todas.
         
         Returns:
             ReportData listo para generar reportes.
@@ -273,7 +305,9 @@ class DataProcessor:
         )
         
         for nombre, inicio, fin in periodos:
-            period_data = self.create_period_data(nombre, inicio, fin)
+            period_data = self.create_period_data(
+                nombre, inicio, fin, categorias_incluidas
+            )
             report.agregar_periodo(period_data)
         
         return report
@@ -282,7 +316,8 @@ class DataProcessor:
         self,
         fecha_inicio: date,
         fecha_fin: date,
-        titulo: str = "INFORME DELICTUAL"
+        titulo: str = "INFORME DELICTUAL",
+        categorias_incluidas: Optional[List[str]] = None
     ) -> ReportData:
         """
         Crea un reporte de un solo período.
@@ -294,7 +329,8 @@ class DataProcessor:
         nombre = format_date_range(fecha_inicio, fecha_fin)
         return self.create_report(
             [(nombre, fecha_inicio, fecha_fin)],
-            titulo
+            titulo,
+            categorias_incluidas=categorias_incluidas
         )
     
     def create_comparative_report(

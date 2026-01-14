@@ -521,8 +521,11 @@ class PeriodComparator:
             
             resultados.append(item)
         
-        # Ordenar por valor del período principal descendente
-        return sorted(resultados, key=lambda x: -list(x.valores.values())[0] if x.valores else 0)
+        # Ordenar por valor del período principal descendente, y alfabéticamente en caso de empate
+        return sorted(resultados, key=lambda x: (
+            -list(x.valores.values())[0] if x.valores else 0,  # Valor descendente
+            x.categoria  # Alfabético ascendente en empate
+        ))
     
     def comparar_delitos_multiple(self) -> List[ComparacionItemMultiple]:
         """Compara delitos entre múltiples períodos."""
@@ -551,3 +554,24 @@ class PeriodComparator:
     def comparar_aprehendidos_multiple(self) -> List[ComparacionItemMultiple]:
         """Compara clasificación de aprehendidos entre múltiples períodos."""
         return self._comparar_conteos_multiple(lambda p: p.conteo_aprehendidos_clasificacion())
+    
+    def comparar_categorias_multiple(self) -> List[ComparacionItemMultiple]:
+        """Compara categorías entre múltiples períodos con orden especial (ROBOS primero)."""
+        resultados = self._comparar_conteos_multiple(lambda p: p.conteo_por_categoria())
+        
+        # Orden de prioridad para categorías
+        orden_categorias = {
+            'ROBOS': 0,
+            'TENTATIVA DE ROBOS': 1,
+            'HURTOS': 2,
+            'TENTATIVA DE HURTOS': 3,
+            'ESTAFAS': 4,
+            'OTROS DELITOS': 5,
+        }
+        
+        # Ordenar con ROBOS primero, luego por valor, luego alfabético
+        return sorted(resultados, key=lambda x: (
+            orden_categorias.get(x.categoria.upper(), 99),  # Orden especial
+            -list(x.valores.values())[0] if x.valores else 0,  # Valor descendente
+            x.categoria  # Alfabético en caso de empate
+        ))
